@@ -1394,3 +1394,57 @@ void object_unknown_000bfd20(
 	}
 	*(short *)(object+0xD0)= NONE;
 }
+
+/* 0x004c1bd8: four of something of 0xD0C bytes: a tag (0x00), two numbers
+(0x04 and 0x08) and its data (from 0x0C) */
+byte unknown_004c1bd8[4*0xD0C];
+
+/* 0x0003d4f0: where the things of an object are: from one of those four
+(by its index) or from the object itself (its data at its short at 0x116, the
+tag of the tag of the tag at 0x38 of its definition); the tag, the data, how
+many (the long at 0x48 of the definition of that tag, 0x40 at most for the
+four) and the two numbers (0 and the object for an object) */
+void __attribute__((stdcall)) object_unknown_0003d4f0(
+	boolean from_table,
+	long object_index,
+	short index,
+	unsigned long *second,
+	unsigned long *first,
+	unsigned long *tag,
+	byte **data,
+	unsigned long *count)
+{
+	if (from_table)
+	{
+		byte *entry= unknown_004c1bd8+index*0xD0C;
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)entry&0xFFFF].address;
+		unsigned long maximum;
+
+		*tag= *(const unsigned long *)entry;
+		*data= entry+0x0C;
+		maximum= *(const unsigned long *)(definition+0x48);
+		if (maximum>0x40)
+		{
+			maximum= 0x40;
+		}
+		*count= maximum;
+		*second= *(const unsigned long *)(entry+0x08);
+		*first= *(const unsigned long *)(entry+0x04);
+	}
+	else
+	{
+		byte *object= OBJECT_DATA(object_index);
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+		unsigned long last_tag;
+
+		definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(definition+0x38)&0xFFFF].address;
+		last_tag= *(const unsigned long *)(definition+0x04);
+		definition= (const byte *)(uintptr_t)global_tag_instances[last_tag&0xFFFF].address;
+		*tag= last_tag;
+		*count= (unsigned long)(long)*(const short *)(object+0x114)/0x34;
+		*data= object+*(const short *)(object+0x116);
+		*count= *(const unsigned long *)(definition+0x48);
+		*second= 0;
+		*first= object_index;
+	}
+}

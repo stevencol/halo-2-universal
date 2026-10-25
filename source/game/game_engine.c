@@ -1012,3 +1012,62 @@ boolean unknown_002797a0_next(
 
 	return result;
 }
+
+/* 0x00165bc0: two of the lists of something (at 0x10 and 0x14) get as many
+longs as they have room for, each with zeros and NONE; unless asked to keep
+them, the lists are made empty first, and the lists at 0x0C and 0x18 are made
+empty at the end */
+void __attribute__((stdcall)) game_engine_unknown_00165bc0(
+	long first_count,
+	const unsigned long *first,
+	byte *lists,
+	const unsigned long *second,
+	long second_count,
+	boolean keep)
+{
+	struct game_engine_list *list;
+	long index;
+
+	if (first_count>0)
+	{
+		list= *(struct game_engine_list **)(lists+0x10);
+		if (!keep)
+		{
+			list->count= 0;
+		}
+		for (index= 0; index<first_count; index++)
+		{
+			list= *(struct game_engine_list **)(lists+0x10);
+			if (list->count<list->maximum_count-1)
+			{
+				list->longsC[list->count]= first[index];
+				list->shorts8[list->count]= 0;
+				list->longs10[list->count]= 0;
+				list->shorts14[list->count]= NONE;
+				list->count++;
+			}
+		}
+	}
+	if (second_count>0)
+	{
+		list= *(struct game_engine_list **)(lists+0x14);
+		if (!keep)
+		{
+			list->count= 0;
+		}
+		for (index= 0; index<second_count; index++)
+		{
+			list= *(struct game_engine_list **)(lists+0x14);
+			if (list->count<list->maximum_count-1)
+			{
+				list->longsC[list->count]= second[index];
+				list->shorts8[list->count]= 0;
+				list->longs10[list->count]= 0;
+				list->shorts14[list->count]= NONE;
+				list->count++;
+			}
+		}
+	}
+	(*(struct game_engine_list **)(lists+0x0C))->count= 0;
+	(*(struct game_engine_list **)(lists+0x18))->count= 0;
+}

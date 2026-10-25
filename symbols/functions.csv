@@ -3695,3 +3695,6 @@ address,name,source,arguments,returns,convention
 000bfd20,object_unknown_000bfd20,source/objects/objects.c,eax,void
 0020aa70,unit_unknown_0020aa70,source/units/units.c,eax ecx edx stack,void,stdcall
 0001e4e0,rasterizer_debug_add_plane,source/rasterizer/rasterizer_debug.c,ecx edx stack stack,bool,stdcall
+00165bc0,game_engine_unknown_00165bc0,source/game/game_engine.c,eax ecx stack stack stack stack,void,stdcall
+00155810,unit_unknown_00155810,source/units/units.c,ebx stack,short,stdcall
+0003d4f0,object_unknown_0003d4f0,source/objects/objects.c,eax ebx stack stack stack stack stack stack,void,stdcall

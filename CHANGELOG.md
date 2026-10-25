@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Tres funciones medianas del camino al menú: dos listas del motor llenadas, qué es una unidad en el asiento de su padre y dónde están las cosas de un objeto
+
+Tres funciones medianas (781 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2840 funciones se pasa a 2843, el 25,24 % de
+las del juego (el 13,696 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_unknown_00165bc0` | `0x00165bc0` | `game/game_engine.c` |
+| `unit_unknown_00155810` | `0x00155810` | `units/units.c` |
+| `object_unknown_0003d4f0` | `0x0003d4f0` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- dos listas del motor llenadas con longs; qué es una unidad en el asiento de su padre (1, 2 o 3); y dónde están las cosas de un objeto, de él o de una tabla de cuatro (`unknown_004c1bd8`, nueva).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Tres funciones medianas del camino al menú: el elemento del bsp de un objeto, una entrada de unos bits y un plano transparente más
 
 Tres funciones medianas (713 bytes) en 3 archivos, de las que el juego ejecuta

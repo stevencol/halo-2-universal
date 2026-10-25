@@ -2577,3 +2577,53 @@ void __attribute__((stdcall)) unit_unknown_0020aa70(
 		break;
 	}
 }
+
+/* 0x00155810: for a unit in a seat of its parent (at 0x14), whose
+definition has the seats at 0x1CC (0xB0 bytes, by the short at 0x1FC of the
+unit): what it is (1, 2 or 3; 0 when it is no unit or has no parent) and
+whether the seat has the bit 4 of its flags. With the bit 6, 1 when
+unit_unknown_000c7070 says so, 3 for the number 0x0400004A of
+object_unknown_0010f5f0; 2 otherwise, and for a parent of another kind */
+short __attribute__((stdcall)) unit_unknown_00155810(
+	long unit_index,
+	short *kind)
+{
+	short result= 0;
+	const byte *unit= (const byte *)object_try_and_get_and_verify_type(unit_index, 3);
+	const byte *parent;
+	long number;
+
+	*kind= 0;
+	if (!unit || *(const long *)(unit+0x14)==NONE)
+	{
+		return 0;
+	}
+	parent= UNIT_OBJECT_GET(*(const long *)(unit+0x14));
+	number= object_unknown_0010f5f0(unit_index);
+	if ((1UL<<(parent[0xAA]&0x1F))&3)
+	{
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)parent&0xFFFF].address;
+		unsigned long flags= *(const unsigned long *)(*(const byte *const *)(definition+0x1CC)+*(const short *)(unit+0x1FC)*0xB0);
+
+		if ((flags>>4)&1)
+		{
+			result= 1;
+		}
+		if ((flags>>6)&1)
+		{
+			if (unit_unknown_000c7070(unit_index))
+			{
+				*kind= 1;
+				return 1;
+			}
+			if (number==0x0400004A)
+			{
+				*kind= 3;
+				return 1;
+			}
+		}
+	}
+	*kind= 2;
+
+	return result;
+}
