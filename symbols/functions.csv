@@ -3907,3 +3907,5 @@ address,name,source,arguments,returns,convention
 001008f0,weapon_unknown_001008f0,source/units/units.c,eax stack stack,int,stdcall
 000c6810,unit_unknown_000c6810,source/units/units.c,eax,void
 0012e960,scenario_unknown_0012e960,source/scenario/scenario.c,eax stack stack,int,stdcall
+0010dc70,unit_unknown_0010dc70,source/units/units.c,eax,bool
+00222e90,rumble_unknown_00222e90,source/sound/sound_manager.c,eax,int

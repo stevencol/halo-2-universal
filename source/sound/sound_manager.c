@@ -14344,3 +14344,72 @@ void sound_unknown_0018cb10(
 		}
 	}
 }
+
+/* 0x00222e90: how much the two motors of a gamepad rumble (two words of 0
+to 65535): from those at 0x80 and 0x84 of an entry, its eight effects (a
+tag and an effect of it at 0x00, a scale at 0x08; 0x0C bytes each from
+0x00, their times from 0x60), each of their two motors (0x0C bytes from 0x24
+of the effect, of 0x4C bytes at 0x70 of the tag, as many as at 0x6C) by its
+function at the fraction of its duration, and what unknown_00502120 adds */
+unsigned long rumble_unknown_00222e90(
+	const byte *entry)
+{
+	real motors[2];
+	long index;
+	unsigned short left;
+	unsigned short right;
+	real value;
+
+	motors[0]= *(const real *)(entry+0x80);
+	motors[1]= *(const real *)(entry+0x84);
+	for (index= 0; index<8; index++)
+	{
+		const byte *item= entry+index*0x0C;
+		long effect_index= *(const long *)(item+0x04);
+		const byte *definition;
+		real time;
+		long motor;
+
+		if (*(const long *)item==NONE || effect_index==NONE)
+		{
+			continue;
+		}
+		definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)item&0xFFFF].address;
+		time= *(const real *)(entry+0x60+index*4);
+		if (effect_index<0 || effect_index>=*(const long *)(definition+0x6C))
+		{
+			continue;
+		}
+		for (motor= 0; motor<2; motor++)
+		{
+			const byte *data= *(const byte *const *)(definition+0x70)+effect_index*0x4C+0x24+motor*0x0C;
+			real fraction;
+
+			if (!(*(const real *)data>time))
+			{
+				continue;
+			}
+			fraction= time/ *(const real *)data;
+			if (0.0f>fraction)
+			{
+				fraction= 0.0f;
+			}
+			else if (fraction>1.0f)
+			{
+				fraction= 1.0f;
+			}
+			motors[motor]= unknown_0013b390(data+0x04, fraction, 1.0f)**(const real *)(item+0x08) + motors[motor];
+		}
+	}
+	if (*(const real *)(unknown_00502120+0x228)!=0.0f)
+	{
+		motors[0]= *(const real *)(unknown_00502120+0x220)**(const real *)(unknown_00502120+0x228) + motors[0];
+		motors[1]= *(const real *)(unknown_00502120+0x224)**(const real *)(unknown_00502120+0x228) + motors[1];
+	}
+	value= motors[0]*65535.0f;
+	left= (unsigned short)lrintf(0.0f>value ? 0.0f : value>65535.0f ? 65535.0f : value);
+	value= motors[1]*65535.0f;
+	right= (unsigned short)lrintf(0.0f>value ? 0.0f : value>65535.0f ? 65535.0f : value);
+
+	return left|(unsigned long)right<<16;
+}

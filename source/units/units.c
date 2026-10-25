@@ -3782,3 +3782,70 @@ other:
 		}
 	}
 }
+
+/* 0x00547648: what a byte of the twelve of the vibrations is worth */
+real unknown_00547648;
+
+/* 0x0010dc70: a tick of the vibrations of what is at the short at 0x33E of
+an object: with a thing at 0x38, the real at 0x40 goes up (by 0.000033
+while it is nearly zero, by 0.15 up to 1 after); without, it goes down by
+0.075 to 0, the twelve bytes at 0x50 go down by the real at 0x1E8 of its
+definition (0.9 for none), and with a short at 0x36 the countdown at 0x02 is
+0xFF while the real is not zero, or goes down to start again at 30 to 254
+ticks, at random. Whether something vibrates */
+boolean unit_unknown_0010dc70(
+	long object_index)
+{
+	const byte *object= UNIT_OBJECT_GET(object_index);
+	byte *data= (byte *)UNIT_UNKNOWN33E(object);
+	const byte *definition= UNIT_DEFINITION_GET(object);
+	boolean result= FALSE;
+	real value;
+	long index;
+
+	if (*(const long *)(data+0x38)!=NONE)
+	{
+		if (0.0001f>*(const real *)(data+0x40))
+		{
+			value= *(const real *)(data+0x40)+0.000033f;
+			*(real *)(data+0x40)= value>0.0f ? value : 0.0f;
+		}
+		else
+		{
+			value= *(const real *)(data+0x40)+0.15f;
+			*(real *)(data+0x40)= value>1.0f ? 1.0f : value;
+		}
+		return TRUE;
+	}
+	value= *(const real *)(data+0x40)-0.075f;
+	*(real *)(data+0x40)= value>0.0f ? value : 0.0f;
+	for (index= 0; index<12; index++)
+	{
+		real scale= *(const real *)(definition+0x1E8)>0.0f ? *(const real *)(definition+0x1E8) : 0.9f;
+		long whole= (long)((real)(signed char)data[index+0x50]*unknown_00547648*scale*128.0f);
+
+		data[index+0x50]= (byte)(whole<-0x80 ? -0x80 : whole>0x7F ? 0x7F : whole);
+		if (data[index+0x50])
+		{
+			result= TRUE;
+		}
+	}
+	if (*(const short *)(UNIT_UNKNOWN33E(UNIT_OBJECT_GET(object_index))+0x36)!=NONE)
+	{
+		if (*(const real *)(data+0x40)!=0.0f)
+		{
+			data[0x02]= 0xFF;
+		}
+		else if (!data[0x02])
+		{
+			global_random_seed_reference[1]= global_random_seed_reference[1]*1664525L + 1013904223L;
+			data[0x02]= (byte)((((global_random_seed_reference[1]>>16)*225)>>16)+30);
+		}
+		else
+		{
+			data[0x02]--;
+		}
+	}
+
+	return result;
+}

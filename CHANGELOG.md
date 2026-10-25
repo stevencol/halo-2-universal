@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: un tick de las vibraciones de un objeto y cuánto vibran los motores de un mando
+
+Dos funciones medianas (944 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3058 funciones se pasa a 3060, el 27,16 % de
+las del juego (el 14,776 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_0010dc70` | `0x0010dc70` | `units/units.c` |
+| `rumble_unknown_00222e90` | `0x00222e90` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- un tick de las vibraciones de un objeto: su real sube o baja, los doce bytes bajan según su definición, y una cuenta atrás que vuelve a empezar al azar entre 30 y 254 ticks; y cuánto vibran los dos motores de un mando (dos palabras de 0 a 65535) por los ocho efectos de una entrada, cada motor por su función en la fracción de su duración, más lo que añade `unknown_00502120`. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Dos funciones del camino al menú: dos reales de una unidad que van un tick hacia 1 o 0, y los clusters de la bsp cerca de un punto
 
 Dos funciones medianas (793 bytes) en 2 archivos, de las que el juego ejecuta
