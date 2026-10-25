@@ -2252,3 +2252,46 @@ void havok_unknown_001c69b0(
 		}
 	}
 }
+
+/* 0x000e0d70, of objects.c */
+boolean __attribute__((stdcall)) object_unknown_000e0d70(long object_index, real *offset);
+
+/* 0x001d43d0: the matrix of a havok component from that of its body: the
+same, raised by the offset object_unknown_000e0d70 gives for a biped when
+the component has the bit 9 at 0x04; for a component with a main body (the
+byte at 0x18, of those at 0x74) and a node (the byte at 0x19), times the
+inverse of that node of the render model of its object's model */
+void __attribute__((stdcall)) havok_unknown_001d43d0(
+	const byte *component,
+	const real_matrix4x3 *matrix,
+	real_matrix4x3 *result)
+{
+	signed char main_body= (signed char)component[0x18];
+	long object_index= *(const long *)(component+0x08);
+
+	*result= *matrix;
+	if ((*(const unsigned long *)(component+0x04)>>9)&1)
+	{
+		const struct object_header_datum *header= (const struct object_header_datum *)object_header_data->data+(object_index&0xFFFF);
+		real offset;
+
+		if (((1UL<<(header->type&31))&1) && object_unknown_000e0d70(object_index, &offset))
+		{
+			result->position.z+= offset;
+		}
+		return;
+	}
+	if (main_body<0 || main_body>=*(const long *)(component+0x74) || component[0x19]==0xFF)
+	{
+		return;
+	}
+	{
+		const byte *object= (const byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+		const byte *model= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(definition+0x38)&0xFFFF].address;
+		const byte *render_model= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(model+0x04)&0xFFFF].address;
+
+		matrix4x3_multiply(result,
+			(const real_matrix4x3 *)(*(const byte *const *)(render_model+0x4C)+(signed char)component[0x19]*0x60+0x28), result);
+	}
+}

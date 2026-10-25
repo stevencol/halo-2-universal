@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: la matriz de un componente de havok desde la de su cuerpo y las matrices de los nodos de un modelo
+
+Dos funciones medianas (488 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3060 funciones se pasa a 3062, el 27,18 % de
+las del juego (el 14,792 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001d43d0` | `0x001d43d0` | `physics/havok.c` |
+| `unknown_0016d9c0` | `0x0016d9c0` | `game/game_unknown_00134d90.c` |
+
+### Lo que se sabe
+
+- la matriz de un componente de havok desde la de su cuerpo: la misma, subida por lo que da `object_unknown_000e0d70` para un bípedo, o por la inversa del nodo del modelo de su objeto para un componente con cuerpo principal y nodo; y las matrices de los nodos de un modelo desde sus orientaciones, cada una por la de su padre, recorriendo hermanos e hijos. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Dos funciones del camino al menú: un tick de las vibraciones de un objeto y cuánto vibran los motores de un mando
 
 Dos funciones medianas (944 bytes) en 2 archivos, de las que el juego ejecuta

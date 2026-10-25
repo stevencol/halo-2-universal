@@ -326,3 +326,48 @@ long __attribute__((stdcall)) unknown_001376c0(
 
 	return *(const long *)(model+0x48);
 }
+
+/* 0x0016d9c0: the matrices of the nodes of a render model (0x60 bytes each,
+at 0x4C, as many as at 0x48: a parent at 0x04, a first child at 0x06 and a
+next sibling at 0x08) from their orientations (32 bytes each), each times
+its parent's, the first's times the matrix of a point, a forward and an
+up; from the first, each node's next sibling then its first child */
+void __attribute__((stdcall)) unknown_0016d9c0(
+	const real_point3d *point,
+	const real_vector3d *forward,
+	const real_vector3d *up,
+	const byte *render_model,
+	real_matrix4x3 *matrices,
+	const byte *orientations)
+{
+	real_matrix4x3 root;
+	long queue[256];
+	long read_index= 0;
+	long write_index= 1;
+
+	matrix4x3_from_point_and_vectors(&root, point, forward, up);
+	if (*(const long *)(render_model+0x48)<=0)
+	{
+		return;
+	}
+	queue[0]= 0;
+	do
+	{
+		long node_index= queue[read_index++];
+		const byte *node= *(const byte *const *)(render_model+0x4C)+node_index*0x60;
+		const real_matrix4x3 *parent= node_index==0 ? &root : &matrices[*(const short *)(node+0x04)];
+		real_matrix4x3 local;
+
+		matrix4x3_from_orientation(&local, (const real_orientation *)(orientations+node_index*32));
+		matrix4x3_multiply(parent, &local, &matrices[node_index]);
+		if (*(const short *)(node+0x08)!=NONE)
+		{
+			queue[write_index++]= *(const short *)(node+0x08);
+		}
+		if (*(const short *)(node+0x06)!=NONE)
+		{
+			queue[write_index++]= *(const short *)(node+0x06);
+		}
+	}
+	while (read_index!=write_index);
+}
