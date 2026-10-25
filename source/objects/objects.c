@@ -1869,3 +1869,34 @@ void *object_unknown_000d5260(
 
 	return *(byte *const *)(block+4)+*(const short *)(definition+0x0E)*index;
 }
+
+/* 0x000d58a0: the entry (0x28 bytes) of the palette of a scenario of a
+datum of the scenario (its index in the short at 0x00, its object type in
+the byte at 0x2E), by the block of the palette at 0x0C of the type; NULL if
+the datum has none, or its type or index is not one there is */
+void *__attribute__((stdcall)) object_unknown_000d58a0(
+	const byte *datum,
+	const byte *scenario)
+{
+	long index= *(const short *)datum;
+	long type= *(const signed char *)(datum+0x2E);
+	short offset;
+	const byte *block;
+
+	if (*(const short *)datum==NONE || type<0 || type>12)
+	{
+		return NULL;
+	}
+	offset= *(const short *)(object_type_definitions[type]+0x0C);
+	if (offset==NONE)
+	{
+		return NULL;
+	}
+	block= scenario+offset;
+	if (index<0 || index>*(const long *)block-1)
+	{
+		return NULL;
+	}
+
+	return *(byte *const *)(block+4)+index*0x28;
+}

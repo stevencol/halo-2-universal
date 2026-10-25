@@ -3845,3 +3845,8 @@ address,name,source,arguments,returns,convention
 000d5260,object_unknown_000d5260,source/objects/objects.c,edx esi,pointer
 00014390,rasterizer_unknown_00014390,source/rasterizer/rasterizer_xbox.c,esi edi xmm2,bool
 0023c110,unknown_0023c110,,stack stack stack,void,stdcall
+000d58a0,object_unknown_000d58a0,source/objects/objects.c,eax stack,pointer,stdcall
+00014480,rasterizer_unknown_00014480,source/rasterizer/rasterizer_xbox.c,eax stack stack,bool,stdcall
+001daea0,havok_unknown_001daea0,source/physics/havok.c,edx stack,pointer,stdcall
+001dd7c0,havok_unknown_001dd7c0,source/physics/havok.c,ecx stack,pointer,stdcall
+0013bb90,unknown_0013bb90,source/sound/sound_manager.c,eax stack stack,real:xmm0,stdcall

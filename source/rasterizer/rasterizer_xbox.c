@@ -744,3 +744,40 @@ boolean rasterizer_unknown_00014390(
 
 	return TRUE;
 }
+
+/* 0x00137550, of bitmap_group.c */
+struct bitmap_data *bitmap_group_get_bitmap(long bitmap_group_index, short bitmap_index);
+
+/* 0x00014480: a bitmap of a bitmap group (by an index, wrapped to the count
+at 0x44 of the group) wanted at a stage, when its texture is loaded already;
+TRUE when it is not loaded yet (and nothing is wanted), FALSE otherwise */
+boolean __attribute__((stdcall)) rasterizer_unknown_00014480(
+	long tag_index,
+	long stage,
+	long index)
+{
+	long count;
+	struct bitmap_data *bitmap;
+
+	if (tag_index==NONE)
+	{
+		return FALSE;
+	}
+	count= *(const long *)((const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address+0x44);
+	if (count<=0)
+	{
+		return FALSE;
+	}
+	bitmap= bitmap_group_get_bitmap(tag_index, (short)((short)index%count));
+	if (!bitmap)
+	{
+		return FALSE;
+	}
+	if (!shell_bitmap_get_texture(bitmap, 0.0f))
+	{
+		return TRUE;
+	}
+	rasterizer_unknown_00014390((short)stage, bitmap, 0.0f);
+
+	return FALSE;
+}

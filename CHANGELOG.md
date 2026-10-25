@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cinco funciones del camino al menú: la entrada de la paleta de un dato del escenario, un bitmap de un grupo pedido en una etapa, una animación de un grafo y sus datos, y el valor de una función de un tag
+
+Cinco funciones medianas (567 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2996 funciones se pasa a 3001, el 26,64 % de
+las del juego (el 14,298 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_000d58a0` | `0x000d58a0` | `objects/objects.c` |
+| `rasterizer_unknown_00014480` | `0x00014480` | `rasterizer/rasterizer_xbox.c` |
+| `havok_unknown_001daea0` | `0x001daea0` | `physics/havok.c` |
+| `havok_unknown_001dd7c0` | `0x001dd7c0` | `physics/havok.c` |
+| `unknown_0013bb90` | `0x0013bb90` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- la entrada (0x28 bytes) de la paleta del escenario de un dato, o NULL; un bitmap de un grupo pedido en una etapa si su textura ya está cargada (TRUE si aún no); una animación de un grafo (o del que hereda) con sus recursos pedidos; los datos de una animación, de la caché de animaciones o los suyos; y el valor de una función de un tag, llevado a 0..1 y a sus límites. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 20 de `make_mutations.py`, 0 sin cazar; 2 que no cambian nada, quitadas.
+
 ## 2026-10-25 — Cuatro funciones del camino al menú: una dirección al azar, el dato del escenario de un tipo de objeto, la textura pedida en una etapa y uno de cuatro que vuelve a empezar
 
 Cuatro funciones pequeñas (255 bytes) en 4 archivos, de las que el juego ejecuta

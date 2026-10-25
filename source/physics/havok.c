@@ -1867,3 +1867,57 @@ void __attribute__((stdcall)) havok_unknown_001dd9d0(
 		animation= *(const byte *const *)(graph+0x30)+next*0x6C;
 	}
 }
+
+/* 0x001daea0: an animation of a graph (by an id as havok_unknown_001dd9d0
+takes it, from the graph it inherits it from if it has one), with its
+resource and those of those that follow it asked for; NULL for none */
+byte *__attribute__((stdcall)) havok_unknown_001daea0(
+	const byte *graph,
+	unsigned long id)
+{
+	short index= (short)(id>>16);
+	const byte *owner= graph;
+	byte *animation;
+
+	if (index==NONE)
+	{
+		return NULL;
+	}
+	if ((short)id!=NONE)
+	{
+		owner= unknown4C_get_tag((short)id, graph);
+	}
+	animation= *(byte *const *)(owner+0x30)+index*0x6C;
+	if (animation)
+	{
+		havok_unknown_001dd9d0(graph, id);
+	}
+
+	return animation;
+}
+
+/* 0x001dd7c0: the data of an animation of a graph (by an id as
+havok_unknown_001dd9d0 takes it): with the flag 0x10 at 0x16, that of its
+resource of the animation cache (the resource at 0x24, of those at 0xB0 of
+the graph, 0x14 bytes each), from the offset at 0x28; otherwise the pointer
+at 0x38 */
+byte *__attribute__((stdcall)) havok_unknown_001dd7c0(
+	const byte *graph,
+	unsigned long id)
+{
+	const byte *animation;
+
+	if ((short)id!=NONE)
+	{
+		graph= unknown4C_get_tag((short)id, graph);
+	}
+	animation= (short)(id>>16)!=NONE ? *(const byte *const *)(graph+0x30)+(short)(id>>16)*0x6C : NULL;
+	if (animation[0x16]&0x10)
+	{
+		struct cached_animation *resource= (struct cached_animation *)(*(byte *const *)(graph+0xB0)+*(const long *)(animation+0x24)*0x14);
+
+		return (byte *)animation_cache_get_data(resource, *(const long *)animation)+*(const long *)(animation+0x28);
+	}
+
+	return *(byte *const *)(animation+0x38);
+}

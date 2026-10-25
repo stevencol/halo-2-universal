@@ -14278,3 +14278,36 @@ boolean __attribute__((stdcall)) unknown_0016e950(
 
 	return result;
 }
+
+/* 0x0013bb90: the value of a function of a tag (a size, then where its data
+is) at an input, by unknown_0013b390; unless the byte at 0x01 of the data
+has some of 0xF0, it is taken to 0..1 and then to the bounds at 0x04 and
+0x08. 0 for a function with no data */
+real __attribute__((stdcall)) unknown_0013bb90(
+	const byte *function,
+	real input,
+	real range)
+{
+	const byte *data= *(const byte *const *)(function+4);
+	real value;
+
+	if (!data || *(const long *)function<=0)
+	{
+		return 0.0f;
+	}
+	value= unknown_0013b390(function, input, range);
+	if (data[1]&0xF0)
+	{
+		return value;
+	}
+	if (0.0f>value)
+	{
+		value= 0.0f;
+	}
+	else if (value>1.0f)
+	{
+		value= 1.0f;
+	}
+
+	return (*(const real *)(data+8)-*(const real *)(data+4))*value + *(const real *)(data+4);
+}
