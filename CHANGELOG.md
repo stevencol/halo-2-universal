@@ -2,6 +2,33 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Seis funciones del camino al menú: el ritmo de una partícula, la animación de un nombre en el grafo de un estado, dos partes de las animaciones de una unidad, un color entre dos y los objetos de los datos del escenario
+
+Seis funciones medianas (882 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3032 funciones se pasa a 3038, el 26,97 % de
+las del juego (el 14,499 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `particle_unknown_00247100` | `0x00247100` | `effects/particle_systems.c` |
+| `havok_unknown_001cbd10` | `0x001cbd10` | `physics/havok.c` |
+| `unit_unknown_0010e920` | `0x0010e920` | `units/units.c` |
+| `unit_unknown_0010dbc0` | `0x0010dbc0` | `units/units.c` |
+| `real_math_unknown_00131c20` | `0x00131c20` | `math/real_math.c` |
+| `havok_unknown_001edc10` | `0x001edc10` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- el ritmo de una partícula en un segundo; el id de la animación de un nombre en el grafo de un estado de animaciones; dos partes de las animaciones de una unidad puestas a cero con las animaciones 0x0800004D, 0x08000145 y 0x0C00024D de su grafo; un color entre dos, por rojo, verde y azul o por tono, saturación y valor; y los 2000 de `unknown_0051e9cc` con los objetos de tipo 6 de los datos del escenario que se hacen ahora. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- El color entre dos no se prueba con t de 0 o 1: con un color gris el tono puede quedar en 1 justo, y el `hsv_to_rgb` del juego se sale de su tabla de seis sectores.
+- Mutaciones: 15 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones del camino al menú: si una unidad está en algún estado de sus animaciones, la colocación de un objeto preparada y si un efecto se hace
 
 Tres funciones medianas (796 bytes) en 3 archivos, de las que el juego ejecuta

@@ -2137,3 +2137,67 @@ void __attribute__((stdcall)) havok_unknown_001c6d00(
 	vector[2]= movement[2]*scale;
 	*value= movement_value*scale;
 }
+
+/* 0x001cbd10: the id of the animation of a name in the graph of a state of
+animations (a tag at 0x68), as havok_unknown_001dd0b0 finds it */
+unsigned long *havok_unknown_001cbd10(
+	const byte *state,
+	unsigned long *id,
+	long name)
+{
+	havok_unknown_001dd0b0(
+		(const byte *)(uintptr_t)global_tag_instances[*(const long *)(state+0x68)&0xFFFF].address, id, name);
+
+	return id;
+}
+
+/* 0x000d5910, of units.c */
+boolean __attribute__((stdcall)) unit_unknown_000d5910(const byte *datum, boolean force);
+
+/* 0x001edc10: the 2000 of unknown_0051e9cc are NONE, but those of the
+objects of the type 6 in a cluster (0x04 of the header), without the flag
+0x10 of the header, whose datum of the scenario (0x5C bytes each, at 0x54;
+by the short at 0x1A of the object) is made now: the number at 0x58 of the
+datum, less one, has the object */
+void havok_unknown_001edc10(
+	void)
+{
+	const struct data_array *data= object_header_data;
+	long index;
+
+	memset(unknown_0051e9cc, 0xFF, HAVOK_UNKNOWN_0051E9CC_COUNT*sizeof(long));
+	for (index= 0; index<data->first_unallocated; index++)
+	{
+		const byte *header;
+		long object_index;
+		short scenario_index;
+		const byte *datum;
+		long mapping;
+
+		if (!(data->in_use_bit_vector[index>>5]&(1UL<<(index&31))))
+		{
+			continue;
+		}
+		header= (const byte *)data->data+data->size*index;
+		object_index= (long)(*(const short *)header<<16)|index;
+		if (*(const short *)(header+0x04)==NONE || !((1UL<<(header[0x03]&31))&0x40) || (header[0x02]&0x10))
+		{
+			continue;
+		}
+		scenario_index= *(const short *)((const byte *)((const struct object_header_datum *)data->data)[index].datum+0x1A);
+		if (scenario_index==NONE)
+		{
+			continue;
+		}
+		datum= *(const byte *const *)((const byte *)global_scenario+0x54)+scenario_index*0x5C;
+		if (!unit_unknown_000d5910(datum, TRUE))
+		{
+			continue;
+		}
+		mapping= *(const short *)(datum+0x58)-1;
+		if (mapping!=NONE)
+		{
+			unknown_0051e9cc[mapping]= object_index;
+		}
+	}
+}

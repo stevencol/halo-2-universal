@@ -1561,3 +1561,50 @@ real *real_rgb_color_to_real_hsv_color(
 
 	return hsv;
 }
+
+/* 0x00131c20: a color between two (by t): each red, green and blue between
+theirs or, with the bit 0 of the flags, by hue, saturation and value, the
+hue the short way round (the long way with the bit 1) */
+real *real_math_unknown_00131c20(
+	const real *first,
+	const real *second,
+	unsigned long flags,
+	real t,
+	real *result)
+{
+	real inverse= 1.0f-t;
+	real first_hsv[3];
+	real second_hsv[3];
+	real hsv[3];
+
+	if (!(flags&1))
+	{
+		result[0]= first[0]*inverse + second[0]*t;
+		result[1]= first[1]*inverse + second[1]*t;
+		result[2]= first[2]*inverse + second[2]*t;
+		return result;
+	}
+	real_rgb_color_to_real_hsv_color(first, first_hsv);
+	real_rgb_color_to_real_hsv_color(second, second_hsv);
+	if ((fabsl((long double)first_hsv[0]-second_hsv[0])>0.5L)!=((flags>>1)&1))
+	{
+		if (second_hsv[0]>first_hsv[0])
+		{
+			first_hsv[0]+= 1.0f;
+		}
+		else
+		{
+			second_hsv[0]+= 1.0f;
+		}
+	}
+	hsv[0]= first_hsv[0]*inverse + second_hsv[0]*t;
+	if (hsv[0]>1.0f)
+	{
+		hsv[0]-= 1.0f;
+	}
+	hsv[1]= first_hsv[1]*inverse + second_hsv[1]*t;
+	hsv[2]= first_hsv[2]*inverse + second_hsv[2]*t;
+	real_math_hsv_to_rgb(hsv, (real_rgb_color *)result);
+
+	return result;
+}

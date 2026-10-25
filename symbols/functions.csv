@@ -3881,3 +3881,9 @@ address,name,source,arguments,returns,convention
 00111490,unit_unknown_00111490,source/units/units.c,edi,bool
 000b7930,object_unknown_000b7930,source/objects/objects.c,esi stack stack stack,void,stdcall
 00176210,effect_unknown_00176210,source/effects/effects.c,edi,bool
+00247100,particle_unknown_00247100,source/effects/particle_systems.c,eax ebx,real:xmm0
+001cbd10,havok_unknown_001cbd10,source/physics/havok.c,ecx esi eax,pointer
+001edc10,havok_unknown_001edc10,source/physics/havok.c,,void
+0010e920,unit_unknown_0010e920,source/units/units.c,eax,void
+0010dbc0,unit_unknown_0010dbc0,source/units/units.c,eax,void
+00131c20,real_math_unknown_00131c20,source/math/real_math.c,ecx esi eax xmm5 edi,pointer

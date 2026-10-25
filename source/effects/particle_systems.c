@@ -231,3 +231,11 @@ void __attribute__((stdcall)) particle_unknown_00175a80(
 	first.blue*= second.blue;
 	*(pixel32 *)(particle_system+0x50)= real_rgb_color_to_pixel32(&first);
 }
+
+/* 0x00247100: the rate of a particle (the property at 0x08) in a second */
+real particle_unknown_00247100(
+	const byte *definition,
+	const real *values)
+{
+	return particle_unknown_00246cd0(definition+0x08, values)*30.0f;
+}

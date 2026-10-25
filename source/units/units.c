@@ -3276,3 +3276,46 @@ boolean unit_unknown_00111490(
 
 	return result;
 }
+
+/* 0x001dd0b0, of havok.c */
+void __attribute__((stdcall)) havok_unknown_001dd0b0(const byte *graph, unsigned long *id, long name);
+
+/* the graph of the state of the animations of a unit (a tag at 0x68 of what
+is at the short at 0x12A) */
+#define UNIT_ANIMATION_GRAPH(unit) \
+	((const byte *)(uintptr_t)global_tag_instances[*(const long *)(UNIT_UNKNOWN12A(unit)+0x68)&0xFFFF].address)
+
+/* 0x0010e920: the 0x20 bytes at 0x5C of what is at the short at 0x33E of a
+unit are zeros, with NONE in the short at 0x6C and, at 0x5C, the
+animation 0x0800004D of its graph */
+void unit_unknown_0010e920(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	byte *control= (byte *)UNIT_UNKNOWN33E(unit);
+	unsigned long id;
+
+	memset(control+0x5C, 0, 0x20);
+	*(short *)(control+0x6C)= NONE;
+	havok_unknown_001dd0b0(UNIT_ANIMATION_GRAPH(unit), &id, 0x0800004D);
+	*(unsigned long *)(control+0x5C)= id;
+}
+
+/* 0x0010dbc0: the 0x2C bytes at 0x30 of what is at the short at 0x33E of a
+unit are zeros, with the animations 0x08000145 (at 0x34) and 0x0C00024D (at
+0x30) of its graph, and NONE at 0x38 */
+void unit_unknown_0010dbc0(
+	long unit_index)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	byte *control= (byte *)UNIT_UNKNOWN33E(unit);
+	unsigned long id;
+
+	memset(control+0x30, 0, 0x2C);
+	havok_unknown_001dd0b0(UNIT_ANIMATION_GRAPH(unit), &id, 0x08000145);
+	*(unsigned long *)(control+0x34)= id;
+	havok_unknown_001dd0b0(UNIT_ANIMATION_GRAPH(unit), &id, 0x0C00024D);
+	*(real *)(control+0x40)= 0.0f;
+	*(long *)(control+0x38)= NONE;
+	*(unsigned long *)(control+0x30)= id;
+}
