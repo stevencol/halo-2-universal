@@ -1096,3 +1096,106 @@ boolean effect_unknown_001789f0(
 
 	return *(const short *)(effect+0x20)!=NONE;
 }
+
+/* 0x00179190: the next event of an effect (0x38 bytes each, at 0x18 of its
+definition, as many as at 0x14): the one after its event at 0x5C or, for
+one that loops (the bit 1 or 9 at 0x02), the restart one (the short at 0x04
+of the definition, or 0) after the last; one with a chance to be skipped
+(0x04 of it) is skipped when a random number (of the first or second seed,
+by the bit 2 of the definition) is under it */
+long __attribute__((stdcall)) effect_unknown_00179190(
+	const byte *effect)
+{
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(effect+0x04)&0xFFFF].address;
+	long restart_index= *(const short *)(definition+0x04);
+	long last_index= *(const long *)(definition+0x14)-1;
+	long event_index= *(const short *)(effect+0x5C);
+
+#define EFFECT_LOOPS(effect) \
+	(((*(const unsigned short *)((effect)+0x02)>>1)&1) || ((*(const unsigned short *)((effect)+0x02)>>9)&1))
+
+	if (EFFECT_LOOPS(effect) && restart_index==NONE)
+	{
+		restart_index= 0;
+	}
+	for (;;)
+	{
+		real chance;
+		unsigned long *seed;
+
+		if (EFFECT_LOOPS(effect) && event_index==last_index && restart_index!=NONE)
+		{
+			event_index= restart_index;
+		}
+		else
+		{
+			event_index++;
+		}
+		if (event_index>=*(const long *)(definition+0x14))
+		{
+			break;
+		}
+		chance= *(const real *)(*(const byte *const *)(definition+0x18)+event_index*0x38+0x04);
+		if (!(chance>0.0f))
+		{
+			break;
+		}
+		seed= (*(const unsigned long *)(uintptr_t)global_tag_instances[*(const long *)(effect+0x04)&0xFFFF].address>>2)&1
+			? &global_random_seed_reference[0] : &global_random_seed_reference[1];
+		*seed= *seed*1664525L + 1013904223L;
+		if (!((long double)chance>(long double)(*seed>>16)*(1.0f/65535.0f)))
+		{
+			break;
+		}
+	}
+#undef EFFECT_LOOPS
+
+	return event_index;
+}
+
+/* 0x00173ee0: the particle systems that are not in this structure bsp (the
+short at 0x22) are told their location (particle_system_unknown_00175180):
+the leaf and cluster of the point at 0x10 of their location (at 0x30, of
+0x34 bytes each), in this bsp */
+void particle_systems_unknown_00173ee0(
+	void)
+{
+	const struct data_array *data= particle_system_data;
+	short structure_bsp_index= global_structure_bsp_index;
+	long index;
+
+	for (index= 0; index<data->first_unallocated; index++)
+	{
+		byte *system;
+		struct
+		{
+			long leaf_index;
+			short cluster_index;
+			short structure_bsp_index;
+		} location;
+
+		if (!(data->in_use_bit_vector[index>>5]&(1UL<<(index&31))))
+		{
+			continue;
+		}
+		system= (byte *)data->data+data->size*index;
+		if (*(const short *)(system+0x22)==structure_bsp_index)
+		{
+			continue;
+		}
+		location.leaf_index= NONE;
+		location.cluster_index= NONE;
+		if (*(const long *)(system+0x30)!=NONE && structure_bsp_index!=NONE)
+		{
+			const byte *particle_location= (const byte *)particle_location_data->data+(*(const long *)(system+0x30)&0xFFFF)*0x34;
+
+			location.leaf_index= bsp3d_test_point(global_bsp3d, 0, (const real_point3d *)(particle_location+0x10));
+			if (location.leaf_index!=NONE)
+			{
+				location.cluster_index= *(const short *)(*(const byte *const *)((const byte *)global_structure_bsp+0x30)+location.leaf_index*8);
+			}
+		}
+		location.structure_bsp_index= structure_bsp_index;
+		particle_system_unknown_00175180(system, (const unsigned long *)&location);
+	}
+}

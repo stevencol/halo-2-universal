@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: el siguiente evento de un efecto y los sistemas de partículas avisados de su ubicación
+
+Dos funciones medianas (494 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3064 funciones se pasa a 3066, el 27,22 % de
+las del juego (el 14,823 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effect_unknown_00179190` | `0x00179190` | `effects/effects.c` |
+| `particle_systems_unknown_00173ee0` | `0x00173ee0` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- el siguiente evento de un efecto (el de reinicio tras el último si se repite), saltando los que tienen probabilidad de saltarse cuando un número al azar queda por debajo (comparado con la precisión del x87); y los sistemas de partículas que no están en la bsp actual reciben su hoja y cluster. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: un efecto que pasa a un evento y la ubicación de un efecto
 
 Dos funciones medianas (408 bytes) en 1 archivo, de las que el juego ejecuta

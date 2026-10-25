@@ -3913,3 +3913,5 @@ address,name,source,arguments,returns,convention
 0016d9c0,unknown_0016d9c0,source/game/game_unknown_00134d90.c,edx ecx eax stack stack stack,void,stdcall
 001782a0,effect_unknown_001782a0,source/effects/effects.c,edx edi,void
 001789f0,effect_unknown_001789f0,source/effects/effects.c,esi,bool
+00179190,effect_unknown_00179190,source/effects/effects.c,stack,int,stdcall
+00173ee0,particle_systems_unknown_00173ee0,source/effects/effects.c,,void
