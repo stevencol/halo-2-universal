@@ -12,6 +12,7 @@ gives the address it has there.
 
 #include "cache/cache_files.h"
 #include "game/game.h"
+#include "scenario/scenario.h"
 #include "memory/memory_pool.h"
 #include "objects/cluster_partitions.h"
 
@@ -1363,4 +1364,33 @@ void __attribute__((stdcall)) object_unknown_000bb950(
 			(*(short *)(list+4))--;
 		}
 	}
+}
+
+/* 0x000bfd20: an object whose definition has the bit 0x01 of its byte at
+0x03 gets at 0xD0 which element (0x5C bytes, of the block at 0x22C of the
+structure bsp) has its long at 0xA4 and its bytes at 0xAA and 0xAB (and,
+for 0 in the second, its short at 0xA8); NONE if none */
+void object_unknown_000bfd20(
+	long object_index)
+{
+	byte *object= OBJECT_DATA(object_index);
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+	const byte *bsp= (const byte *)global_structure_bsp;
+	long index;
+
+	if (definition[3]&1)
+	{
+		for (index= 0; index<*(const long *)(bsp+0x22C); index++)
+		{
+			const byte *element= *(const byte *const *)(bsp+0x230)+index*0x5C;
+
+			if (element[6]==object[0xAA] && element[7]==object[0xAB] && *(const long *)element==*(const long *)(object+0xA4)
+				&& (element[7] || *(const short *)(element+4)==*(const short *)(object+0xA8)))
+			{
+				*(short *)(object+0xD0)= (short)index;
+				return;
+			}
+		}
+	}
+	*(short *)(object+0xD0)= NONE;
 }

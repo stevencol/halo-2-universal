@@ -14,6 +14,7 @@ functions are of it is a guess, and so are their names.
 #include "rasterizer_debug.h"
 
 #include "shell/shell.h"
+#include <string.h>
 
 /* ---------- prototypes of functions of the console's libraries */
 
@@ -189,4 +190,52 @@ boolean __attribute__((stdcall)) short_pairs_equal(
 	const short *second)
 {
 	return first[1]==second[1] && first[0]==second[0];
+}
+
+/* 0x00485618 and 0x00485624: where the camera is and where it looks */
+real unknown_00485618[3];
+real unknown_00485624[3];
+
+/* 0x0001e4e0: one more transparent plane (0x70 bytes, 0x400 at most, of
+unknown_004b6288): of kind 3, its distance in front of the camera (negated)
+at 0x04, a procedure at 0x20, so many bytes of data at 0x24 and its point
+at 0x64; FALSE when there is no room (and unknown_004b6291 is cleared) */
+boolean __attribute__((stdcall)) rasterizer_debug_add_plane(
+	unsigned long size,
+	const real *point,
+	long procedure,
+	const byte *data)
+{
+	byte *plane;
+	real x;
+	real y;
+	real z;
+
+	if (unknown_004b6280>=0x400)
+	{
+		if (unknown_004b6291)
+		{
+			unknown_004b6291= FALSE;
+		}
+		return FALSE;
+	}
+	plane= unknown_004b6288+unknown_004b6280*0x70;
+	*(long *)plane= 0;
+	plane[0x0C]= 0;
+	x= point[0]-unknown_00485618[0];
+	y= point[1]-unknown_00485618[1];
+	z= point[2]-unknown_00485618[2];
+	unknown_004b6280++;
+	if (size)
+	{
+		memcpy(plane+0x24, data, size);
+	}
+	*(long *)plane= 3;
+	*(long *)(plane+0x08)= 0;
+	*(long *)(plane+0x20)= procedure;
+	*(real *)(plane+0x04)= 0.0f-(unknown_00485624[2]*z + unknown_00485624[1]*y + unknown_00485624[0]*x);
+	((unsigned long *)(plane+0x64))[0]= ((const unsigned long *)point)[0];
+	((unsigned long *)(plane+0x64))[1]= ((const unsigned long *)point)[1];
+	((unsigned long *)(plane+0x64))[2]= ((const unsigned long *)point)[2];
+	return TRUE;
 }

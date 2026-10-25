@@ -3692,3 +3692,6 @@ address,name,source,arguments,returns,convention
 002276d0,havok_unknown_002276d0,source/physics/havok.c,eax stack,int,stdcall
 001caed0,havok_unknown_001caed0,source/physics/havok.c,eax,void
 00070190,network_unknown_00070190,source/networking/network_life_cycle.c,eax ecx,void
+000bfd20,object_unknown_000bfd20,source/objects/objects.c,eax,void
+0020aa70,unit_unknown_0020aa70,source/units/units.c,eax ecx edx stack,void,stdcall
+0001e4e0,rasterizer_debug_add_plane,source/rasterizer/rasterizer_debug.c,ecx edx stack stack,bool,stdcall

@@ -766,3 +766,5 @@ address,name,source
 004ba02c,unknown_004ba02c,source/game/game_unknown_0002b4a0.c
 004ce1d4,unknown_004ce1d4,source/networking/network_life_cycle.c
 004ce1dc,unknown_004ce1dc,source/networking/network_life_cycle.c
+00485618,unknown_00485618,source/rasterizer/rasterizer_debug.c
+00485624,unknown_00485624,source/rasterizer/rasterizer_debug.c

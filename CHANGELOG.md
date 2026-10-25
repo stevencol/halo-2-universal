@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Tres funciones medianas del camino al menú: el elemento del bsp de un objeto, una entrada de unos bits y un plano transparente más
+
+Tres funciones medianas (713 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2837 funciones se pasa a 2840, el 25,21 % de
+las del juego (el 13,670 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `object_unknown_000bfd20` | `0x000bfd20` | `objects/objects.c` |
+| `unit_unknown_0020aa70` | `0x0020aa70` | `units/units.c` |
+| `rasterizer_debug_add_plane` | `0x0001e4e0` | `rasterizer/rasterizer_debug.c` |
+
+### Lo que se sabe
+
+- el elemento del bsp que corresponde a un objeto; una entrada de unos bits según su clase; y un plano transparente más (dos variables nuevas: dónde está la cámara y adónde mira).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones medianas del camino al menú: un recorrido por dos listas, dos componentes de Havok, algo de 0x84 bytes y algo de la red con dos números al azar
 
 Cuatro funciones medianas (859 bytes) en 3 archivos, de las que el juego ejecuta

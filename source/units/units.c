@@ -2537,3 +2537,43 @@ boolean __attribute__((stdcall)) unit_unknown_00101690(
 
 	return object_index==unit_get_weapon(*(const long *)(UNIT_OBJECT_GET(object_index)+0x14), (signed char)unit[0x213]);
 }
+
+/* 0x0020aa70: an entry of the bits of something (as 0x0010eea0 finds
+them): two, three or four longs by its kind (0x09: 1, 2 or 3), the point
+and a real (the zero vector and 0.0 for another kind) */
+void __attribute__((stdcall)) unit_unknown_0020aa70(
+	unsigned long *last,
+	unsigned long *point,
+	const byte *data,
+	short index)
+{
+	const byte *definition= *(const byte *const *)(data+0x04);
+	long place= *(const short *)(definition+0x06)+(signed char)definition[1];
+	const unsigned long *entry;
+
+	point[0]= ((const unsigned long *)global_zero_vector3d)[0];
+	point[1]= ((const unsigned long *)global_zero_vector3d)[1];
+	point[2]= ((const unsigned long *)global_zero_vector3d)[2];
+	*(real *)last= 0.0f;
+	switch (data[0x09])
+	{
+	case 1:
+		entry= (const unsigned long *)(*(const byte *const *)data+place+index*8+*(const long *)(definition+0x0C)+(signed char)definition[0]);
+		point[0]= entry[0];
+		point[1]= entry[1];
+		break;
+	case 2:
+		entry= (const unsigned long *)(*(const byte *const *)data+place+index*0x0C+*(const long *)(definition+0x0C)+(signed char)definition[0]);
+		point[0]= entry[0];
+		point[1]= entry[1];
+		*last= entry[2];
+		break;
+	case 3:
+		entry= (const unsigned long *)(*(const byte *const *)data+place+index*0x10+*(const long *)(definition+0x0C)+(signed char)definition[0]);
+		point[0]= entry[0];
+		point[1]= entry[1];
+		point[2]= entry[2];
+		*last= entry[3];
+		break;
+	}
+}
