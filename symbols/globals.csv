@@ -795,3 +795,4 @@ address,name,source
 004c152c,unknown_004c152c,source/game/game_unknown_0002b4a0.c
 004c19ac,unknown_004c19ac,source/game/game_unknown_0002b4a0.c
 004ba138,unknown_004ba138,source/game/game_unknown_0002b4a0.c
+00485b28,unknown_00485b28,source/rasterizer/rasterizer_xbox.c

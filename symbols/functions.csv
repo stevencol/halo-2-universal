@@ -3768,3 +3768,5 @@ address,name,source,arguments,returns,convention
 000d1490,unit_unknown_000d1490,source/units/units.c,eax esi,real:xmm0
 00072c80,network_life_cycle_unknown_00072c80,source/networking/network_life_cycle.c,edx esi,void
 00185b30,sound_unknown_00185b30,source/sound/sound_manager.c,eax esi stack,real:xmm0,stdcall
+001cf950,havok_unknown_001cf950,source/physics/havok.c,eax edx,void
+0001beb0,rasterizer_unknown_0001beb0,source/rasterizer/rasterizer_xbox.c,,void

@@ -10,6 +10,7 @@ the file is a guess, by what its functions start.
 
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 
 #include "cache/cache_files.h"
 #include "cache/texture_cache.h"
@@ -1381,4 +1382,35 @@ void havok_component_unknown_001c4fc0(
 			*(unsigned long *)(thing+0xA8)= game_time_globals->time;
 		}
 	}
+}
+
+/* 0x001cf950: something of 0xA0 bytes of Havok as it starts: a number at
+0x08, a time 0.35 of a second ago at 0x10, NONE, zeros, and three points
+whose third is -0 (0x70 to 0x94) */
+void havok_unknown_001cf950(
+	byte *data,
+	long number)
+{
+	long index;
+
+	*(long *)(data+0x08)= number;
+	*(long *)(data+0x04)= 0;
+	*(long *)(data+0x0C)= NONE;
+	data[0x18]= 0xFF;
+	data[0x19]= 0xFF;
+	*(long *)(data+0x20)= NONE;
+	*(real *)(data+0x14)= 0.0f;
+	data[0x1A]= 0;
+	data[0x1B]= 0;
+	data[0x1C]= 0;
+	*(long *)(data+0x10)= -lrintf((real)game_time_globals->ticks_per_second*0.35f);
+	for (index= 0; index<3; index++)
+	{
+		*(unsigned long *)(data+0x70+index*12)= 0;
+		*(unsigned long *)(data+0x74+index*12)= 0;
+		*(unsigned long *)(data+0x78+index*12)= 0x80000000;
+	}
+	*(unsigned long *)(data+0x94)= 0;
+	*(unsigned long *)(data+0x98)= 0;
+	*(unsigned long *)(data+0x9C)= 0;
 }

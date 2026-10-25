@@ -17,6 +17,7 @@ functions belong to it is a guess, and so are their names.
 #include "main/main.h"
 #include "shell/shell.h"
 #include "game/game.h"
+#include "rasterizer/rasterizer_text.h"
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
@@ -653,4 +654,32 @@ byte *rasterizer_unknown_0001c290(
 	}
 
 	return unknown_00487288+(index<<7);
+}
+
+/* 0x00510c50, of main.c */
+extern struct unknown_00510c50 *unknown_00510c50;
+
+/* 0x00485b28: seven reals of the height of the viewport of the text */
+real unknown_00485b28[7];
+
+/* 0x0001beb0: they are 1, 0, 0, 2, 4, 0 and 1 over the height of the
+viewport (its shorts at 0x00 and 0x04), the last twice that with the byte
+at 0x05 of unknown_00510c50 */
+void rasterizer_unknown_0001beb0(
+	void)
+{
+	const short *bounds= (const short *)&rasterizer_text_bounds;
+	real height= (real)(bounds[2]-bounds[0]);
+
+	unknown_00485b28[3]= 2.0f/height;
+	unknown_00485b28[0]= 1.0f/height;
+	unknown_00485b28[1]= 0.0f/height;
+	unknown_00485b28[2]= 0.0f/height;
+	unknown_00485b28[4]= 4.0f/height;
+	unknown_00485b28[5]= 0.0f/height;
+	unknown_00485b28[6]= 1.0f/height;
+	if (unknown_00510c50 && ((const byte *)unknown_00510c50)[5])
+	{
+		unknown_00485b28[6]= 1.0f/height*2.0f;
+	}
 }

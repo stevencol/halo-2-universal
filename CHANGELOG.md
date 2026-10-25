@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones pequeñas del camino al menú: algo de Havok que empieza y siete reales de la altura de la pantalla del texto
+
+Dos funciones pequeñas (310 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2918 funciones se pasa a 2920, el 25,92 % de
+las del juego (el 13,922 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001cf950` | `0x001cf950` | `physics/havok.c` |
+| `rasterizer_unknown_0001beb0` | `0x0001beb0` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- algo de 0xA0 bytes de Havok como empieza (un tiempo de 0.35 de segundo atrás); y siete reales por la altura de la pantalla del texto (`unknown_00485b28`, nueva).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones pequeñas del camino al menú: cuánto ha contado una unidad con un arma, las dos tareas del ciclo de vida de la red y un valor de una tabla
 
 Tres funciones pequeñas (496 bytes) en 3 archivos, de las que el juego ejecuta
