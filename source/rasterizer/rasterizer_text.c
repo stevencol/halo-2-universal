@@ -13,6 +13,7 @@ Halo 1's; that these functions are of it is a guess, and so are their names.
 #include "bitmaps/bitmaps.h"
 #include "cache/texture_cache.h"
 #include "text/font_cache.h"
+#include "saved games/game_state.h"
 
 #include <string.h>
 
@@ -547,4 +548,47 @@ void unknown_005093e0_clear(
 			unknown_004b569d= TRUE;
 		}
 	}
+}
+
+/* 0x0001fbb0: unknown_005093e0 takes 0x3FC bytes of the state of the game:
+zeros, with four reals 1 at 0x180 and one at 0x3F8 (the game has
+game_state_malloc written here) */
+void unknown_005093e0_initialize(
+	void)
+{
+	unknown_005093e0= game_state_malloc(0x3FC);
+	if (unknown_005093e0)
+	{
+		memset(unknown_005093e0, 0, 0x3FC);
+		*(real *)(unknown_005093e0+0x180)= 1.0f;
+		*(real *)(unknown_005093e0+0x184)= 1.0f;
+		*(real *)(unknown_005093e0+0x188)= 1.0f;
+		*(real *)(unknown_005093e0+0x18C)= 1.0f;
+		*(real *)(unknown_005093e0+0x3F8)= 1.0f;
+	}
+}
+
+/* 0x005093e4: 0x24 bytes of the state of the game */
+byte *unknown_005093e4;
+
+/* 0x00020eb0: they take their memory (as 0x0001fbb0): zeros, a byte 1 at
+0x18 and -1 for the seven reals */
+void unknown_005093e4_initialize(
+	void)
+{
+	byte *data= game_state_malloc(0x24);
+
+	unknown_005093e4= data;
+	data[0x00]= 0;
+	data[0x01]= 0;
+	*(real *)(data+0x04)= -1.0f;
+	*(real *)(data+0x08)= -1.0f;
+	*(real *)(data+0x0C)= -1.0f;
+	*(real *)(data+0x10)= -1.0f;
+	*(real *)(data+0x14)= -1.0f;
+	data[0x18]= 1;
+	data[0x19]= 0;
+	*(real *)(data+0x1C)= -1.0f;
+	*(real *)(data+0x20)= -1.0f;
+	data[0x1A]= 0;
 }

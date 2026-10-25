@@ -10,6 +10,7 @@ that the game gives to its two tables of data ("hs thread", "hs globals").
 #include "game/game.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
+#include "scenario/scenario.h"
 
 /* ---------- constants */
 
@@ -153,4 +154,38 @@ void hs_thread_pop_frame(
 	byte *thread= (byte *)hs_thread_data->data+(thread_index&0xFFFF)*HS_THREAD_SIZE;
 
 	*(void **)(thread+0x10)= **(void ***)(thread+0x10);
+}
+
+/* 0x002097c0: a new thread of the scripts (0x418 bytes) of a kind for a
+script (NONE for none): its stack at 0x18, empty, and -2 at 0x08 for a
+script of the type 1 of the scenario (at 0x1BC, 0x28 bytes) */
+long __attribute__((stdcall)) hs_thread_new(
+	long script_index,
+	byte kind)
+{
+	long thread_index= datum_new(hs_thread_data);
+	byte *thread;
+	byte *stack;
+
+	if (thread_index==NONE)
+	{
+		return NONE;
+	}
+	thread= (byte *)hs_thread_data->data+(thread_index&0xFFFF)*0x418;
+	stack= thread+0x18;
+	*(byte **)(thread+0x10)= stack;
+	*(long *)stack= 0;
+	*(short *)(*(byte **)(thread+0x10)+0x0C)= 0;
+	*(long *)(*(byte **)(thread+0x10)+0x04)= NONE;
+	thread[2]= kind;
+	*(long *)(thread+0x04)= script_index;
+	thread[3]= 0;
+	if (script_index!=NONE && *(const short *)(*(const byte *const *)((const byte *)global_scenario+0x1BC)+script_index*0x28+0x20)==1)
+	{
+		*(long *)(thread+0x08)= -2;
+		return thread_index;
+	}
+	*(long *)(thread+0x08)= 0;
+
+	return thread_index;
 }

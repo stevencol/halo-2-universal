@@ -3775,3 +3775,8 @@ address,name,source,arguments,returns,convention
 000bc7b0,object_unknown_000bc7b0,source/objects/objects.c,stack,void,stdcall
 00188f90,sound_unknown_00188f90,source/sound/sound_manager.c,esi edi stack stack,int,stdcall
 001724a0,game_unknown_001724a0,source/game/game_unknown_0016efb0.c,ebx,bool
+0001fbb0,unknown_005093e0_initialize,source/rasterizer/rasterizer_text.c,,void
+00020eb0,unknown_005093e4_initialize,source/rasterizer/rasterizer_text.c,,void
+002097c0,hs_thread_new,source/hs/hs_runtime.c,eax stack,int,stdcall
+000b8ca0,object_unknown_000b8ca0,source/objects/objects.c,stack,int,stdcall
+0016d8d0,unknown_0016d8d0,source/effects/effects.c,stack stack stack stack stack,void,stdcall

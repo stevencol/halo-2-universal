@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 835.
+**Última actualización:** 2026-10-22, al terminar el hito 836.
 
 ## Dónde estamos
 
-- **2925 funciones descompiladas de 11.265: el 25,97 % del juego** (el
-  13,940 % de los bytes de código). Las 11.265 son las de la lista de
+- **2930 funciones descompiladas de 11.265: el 26,01 % del juego** (el
+  13,961 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (3248 en total).
-- Las 3248 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (3253 en total).
+- Las 3253 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile five functions on the way to the main menu: units, objects, sound and the camera* (ver `git log`).
+- Último hito: *Decompile five functions on the way to the main menu: the rasterizer, scripts, objects and nodes* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 528 funciones apuntadas pero sin descompilar (las que el código
   llama); 378 de ellas solo se conocen por su dirección (`unknown_...`).

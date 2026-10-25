@@ -836,3 +836,30 @@ void *__attribute__((stdcall)) effect_location_unknown_0017ae50(
 
 	return effect_location_unknown_0017ae50(unused, index, kind);
 }
+
+void matrix4x3_multiply(const real_matrix4x3 *a, const real_matrix4x3 *b, real_matrix4x3 *result);
+
+/* 0x0016d8d0: the matrices (0x34 bytes) of the nodes under one (from its
+short at 0x06, each to the next at 0x08; nodes of 0x60 bytes, as many as at
+0x48, at 0x4C) and all theirs are multiplied by a matrix, up to a count */
+void __attribute__((stdcall)) unknown_0016d8d0(
+	const byte *data,
+	const real_matrix4x3 *matrix,
+	long node_index,
+	long count,
+	real_matrix4x3 *matrices)
+{
+	long child= *(const short *)(*(const byte *const *)(data+0x4C)+node_index*0x60+0x06);
+
+	while (child>=0 && child<*(const long *)(data+0x48) && child<count)
+	{
+		const byte *node= *(const byte *const *)(data+0x4C)+child*0x60;
+
+		matrix4x3_multiply(matrix, &matrices[child], &matrices[child]);
+		if (*(const short *)(node+0x06)!=NONE)
+		{
+			unknown_0016d8d0(data, matrix, child, count, matrices);
+		}
+		child= *(const short *)(node+0x08);
+	}
+}

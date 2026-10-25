@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cinco funciones del camino al menú: dos cosas que toman memoria del estado del juego, un hilo nuevo de los scripts, el objeto que tiene a otro y las matrices de un árbol
+
+Cinco funciones medianas (621 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2925 funciones se pasa a 2930, el 26,01 % de
+las del juego (el 13,961 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_005093e0_initialize` | `0x0001fbb0` | `rasterizer/rasterizer_text.c` |
+| `unknown_005093e4_initialize` | `0x00020eb0` | `rasterizer/rasterizer_text.c` |
+| `hs_thread_new` | `0x002097c0` | `hs/hs_runtime.c` |
+| `object_unknown_000b8ca0` | `0x000b8ca0` | `objects/objects.c` |
+| `unknown_0016d8d0` | `0x0016d8d0` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- 0x3FC y 0x24 bytes del estado del juego con sus valores (`unknown_005093e4`, nueva); un hilo nuevo de los scripts; el objeto que tiene a un objeto; y las matrices de los nodos bajo uno multiplicadas por otra.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 18 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Cinco funciones del camino al menú: los contadores de una unidad, la cuenta de un objeto, un objeto y los de debajo despiertos, una entrada de sonido y si una cámara es buena
 
 Cinco funciones medianas (540 bytes) en 4 archivos, de las que el juego ejecuta

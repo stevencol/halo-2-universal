@@ -1563,3 +1563,32 @@ void __attribute__((stdcall)) object_unknown_000bc7b0(
 		child_index= *(const long *)(OBJECT_DATA(child_index)+0x0C);
 	}
 }
+
+boolean object_unknown_0010cf50(long object_index);
+
+/* 0x000b8ca0: the object that has an object: its parent (0x14) while the
+definition says so (bit 4 of its byte at 0x02), and then, for a unit with
+the bit 0 at 0x04 that object_unknown_0010cf50 says so of, what it has at
+0x154 */
+long __attribute__((stdcall)) object_unknown_000b8ca0(
+	long object_index)
+{
+	for (;;)
+	{
+		const byte *object= OBJECT_DATA(object_index);
+		long parent_index= *(const long *)(object+0x14);
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+
+		if (parent_index!=NONE && ((definition[2]>>4)&1))
+		{
+			object_index= parent_index;
+			continue;
+		}
+		if ((object[4]&1) && ((1UL<<(object[0xAA]&0x1F))&0x1C) && object_unknown_0010cf50(object_index))
+		{
+			return *(const long *)(object+0x154);
+		}
+
+		return object_index;
+	}
+}
