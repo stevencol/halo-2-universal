@@ -1738,3 +1738,43 @@ boolean __attribute__((stdcall)) real_math_unknown_00173910(
 
 	return ai_point_in_polygon2d(point, &points[0][0], (short)*(const long *)(polygon+0x1C), 0.0001f)!=FALSE;
 }
+
+/* 0x00173890: where a point is from a polygon (as real_math_unknown_00173910
+takes them), by a state: on its plane (within 1/64, its distance taken in
+the x87's precision) and inside it, or with a state above zero, 3; off its
+plane, 1 behind or 2 in front for a state of 3 or more, 3 for 1 or 2; 0
+otherwise. Whether it is inside, on the plane */
+long real_math_unknown_00173890(
+	const byte *context,
+	const byte *polygon,
+	long state,
+	boolean *inside)
+{
+	const real *plane= (const real *)(*(const byte *const *)(*(const byte *const *)(context+0x04)+0x0C)
+		+*(const long *)(polygon+0x04)*16);
+	const real *origin= (const real *)(*(const byte *const *)(context+0x08)+0x60);
+	long double exact= (long double)origin[2]*plane[2] + (long double)origin[1]*plane[1]
+		+ (long double)plane[0]*origin[0] - plane[3];
+	real distance= (real)exact;
+
+	if (fabsl(exact)>0.015625L)
+	{
+		*inside= FALSE;
+		if (state<=0)
+		{
+			return 0;
+		}
+		if (state<3)
+		{
+			return 3;
+		}
+		return 0.0f>distance ? 1 : 2;
+	}
+	*inside= real_math_unknown_00173910(context, polygon);
+	if (!*inside && state<=0)
+	{
+		return 0;
+	}
+
+	return 3;
+}

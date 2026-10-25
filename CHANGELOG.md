@@ -2,6 +2,27 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Una función del camino al menú: dónde está un punto respecto a un polígono, según un estado
+
+Una función mediana (128 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3073 funciones se pasa a 3074, el 27,29 % de
+las del juego (el 14,875 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_math_unknown_00173890` | `0x00173890` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- dónde está un punto respecto a un polígono según un estado: en su plano (a menos de 1/64, con la distancia en la precisión del x87) y dentro, 3; fuera del plano, detrás (1) o delante (2) para un estado de 3 o más; 0 o 3 en los demás casos. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirve; el nombre es la dirección.
+- Mutaciones: 4 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Una función del camino al menú: si un punto cae en un polígono de un plano
 
 Una función mediana (481 bytes) en 1 archivo, de las que el juego ejecuta
