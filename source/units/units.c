@@ -3463,3 +3463,95 @@ boolean __attribute__((stdcall)) unit_unknown_000d8b50(
 
 	return TRUE;
 }
+
+/* 0x000b8d30, of objects.c */
+short __attribute__((stdcall)) unknown_000b8d30(boolean unknown, byte *markers, long object_index, long name,
+	long maximum_count);
+
+/* 0x000d1080: where the camera of a unit is, and how (5 longs): for one in
+a seat (at 0x1FC) of its parent, the marker (at 0x08 of the seat, 0xB0
+bytes each from 0x1CC of the parent's definition) of the parent, at the
+parent's origin, and the camera at 0x24 of the seat (FALSE without the
+marker); otherwise its origin, its forward (0x70) and up (0x7C) and the
+camera at 0xF0 of its definition. A scale of 1 first */
+boolean __attribute__((stdcall)) unit_unknown_000d1080(
+	long unit_index,
+	real *matrix,
+	long *camera)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+
+	matrix[0]= 1.0f;
+	if (*(const long *)(unit+0x14)!=NONE && *(const short *)(unit+0x1FC)!=NONE)
+	{
+		long parent_index= *(const long *)(unit+0x14);
+		const byte *seat= *(const byte *const *)(UNIT_DEFINITION_GET(UNIT_OBJECT_GET(parent_index))+0x1CC)
+			+*(const short *)(unit+0x1FC)*0xB0;
+		byte marker[0x70];
+
+		if (!unknown_000b8d30(FALSE, marker, parent_index, *(const long *)(seat+0x08), 1))
+		{
+			return FALSE;
+		}
+		memcpy(matrix, marker+0x38, 13*sizeof(real));
+		object_get_origin(*(const long *)(unit+0x14), (real_point3d *)(matrix+10));
+		memcpy(camera, seat+0x24, 5*sizeof(long));
+		return TRUE;
+	}
+	object_get_origin(unit_index, (real_point3d *)(matrix+10));
+	memcpy(matrix+1, unit+0x70, 3*sizeof(real));
+	memcpy(matrix+7, unit+0x7C, 3*sizeof(real));
+	memcpy(camera, UNIT_DEFINITION_GET(unit)+0xF0, 5*sizeof(long));
+
+	return TRUE;
+}
+
+/* a trigger of a weapon (0x20 bytes) as it starts */
+static inline __attribute__((always_inline)) void weapon_trigger_reset(
+	byte *trigger)
+{
+	*(long *)trigger= NONE;
+	*(short *)(trigger+0x04)= NONE;
+	*(short *)(trigger+0x06)= NONE;
+	*(long *)(trigger+0x08)= NONE;
+	trigger[0x0C]= 0xFF;
+	trigger[0x0D]= 0xFF;
+	*(short *)(trigger+0x0E)= NONE;
+	trigger[0x10]= 0;
+	trigger[0x11]= 0;
+	*(short *)(trigger+0x12)= 0;
+	*(short *)(trigger+0x14)= 0;
+	*(short *)(trigger+0x16)= 0;
+	*(real *)(trigger+0x18)= 1.0f;
+	*(real *)(trigger+0x1C)= 0.0f;
+}
+
+/* 0x0010f040: what is at the short at 0x33E of a weapon starts over: NONE
+at 0x94 and 0x98, its three triggers (from 0x9C), 0 at 0x03, NONE in the
+shorts of the seven pairs at 0xFC and the three at 0x118, and no bit 1 at
+0x00 */
+void weapon_unknown_0010f040(
+	long weapon_index)
+{
+	byte *state= (byte *)UNIT_UNKNOWN33E(UNIT_OBJECT_GET(weapon_index));
+	long index;
+
+	*(long *)(state+0x98)= NONE;
+	*(long *)(state+0x94)= NONE;
+	for (index= 0; index<3; index++)
+	{
+		weapon_trigger_reset(state+0x9C+index*0x20);
+	}
+	state[0x03]= 0;
+	for (index= 0; index<7; index++)
+	{
+		*(short *)(state+0xFC+index*4)= NONE;
+		*(short *)(state+index*4+0xFE)= NONE;
+	}
+	for (index= 0; index<3; index++)
+	{
+		*(short *)(state+0x118+index*4)= NONE;
+		*(short *)(state+0x11A+index*4)= NONE;
+	}
+	state[0x00]&= ~2;
+}

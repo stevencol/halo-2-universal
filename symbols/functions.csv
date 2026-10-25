@@ -3894,3 +3894,5 @@ address,name,source,arguments,returns,convention
 000c86e0,unit_unknown_000c86e0,source/units/units.c,eax stack,void,stdcall
 000d8b50,unit_unknown_000d8b50,source/units/units.c,esi edx edi ebx stack,bool,stdcall
 00130de0,rasterizer_unknown_00130de0,source/rasterizer/rasterizer_xbox.c,ecx,int
+000d1080,unit_unknown_000d1080,source/units/units.c,eax stack stack,bool,stdcall
+0010f040,weapon_unknown_0010f040,source/units/units.c,eax,void

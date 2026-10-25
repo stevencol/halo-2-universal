@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: dónde está la cámara de una unidad y los gatillos de un arma que vuelven a empezar
+
+Dos funciones medianas (795 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3045 funciones se pasa a 3047, el 27,05 % de
+las del juego (el 14,605 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000d1080` | `0x000d1080` | `units/units.c` |
+| `weapon_unknown_0010f040` | `0x0010f040` | `units/units.c` |
+
+### Lo que se sabe
+
+- dónde está la cámara de una unidad y cómo es: en un asiento de su padre, el marcador del asiento en el padre y la cámara del asiento; si no, su origen, adelante y arriba y la cámara de su definición; y lo que guarda un arma de sus tres gatillos y sus pares, que vuelve a empezar. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 2 que no cambian nada, quitadas.
+
 ## 2026-10-25 — Dos funciones del camino al menú: un tick de dos cantidades recientes de daño y lo que se hace con la niebla que llega
 
 Dos funciones medianas (710 bytes) en 2 archivos, de las que el juego ejecuta
