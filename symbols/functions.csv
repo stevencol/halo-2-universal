@@ -3755,3 +3755,9 @@ address,name,source,arguments,returns,convention
 00159170,game_voice_unknown_00159170,source/networking/game_voice.c,ecx,bool
 00249bb0,unknown_00249bb0,source/effects/effects.c,eax xmm1,real:xmm0
 001f03e0,unit_unknown_001f03e0,source/units/units.c,eax,void
+00176a50,effect_unknown_00176a50,source/effects/effects.c,edx stack stack stack stack,void,stdcall
+0017add0,effect_unknown_0017add0,source/effects/effects.c,edx,void
+0016d940,unknown_0016d940,source/effects/effects.c,stack stack,void,stdcall
+0017ae50,effect_location_unknown_0017ae50,source/effects/effects.c,stack stack stack,pointer,stdcall
+001c4fc0,havok_component_unknown_001c4fc0,source/physics/havok.c,eax,void
+00132fd0,unknown_00132fd0,source/main/main.c,eax ecx edx esi stack,void,stdcall

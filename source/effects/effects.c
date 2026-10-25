@@ -728,3 +728,111 @@ real unknown_00249bb0(
 
 	return 1.0f;
 }
+
+/* 0x00176a50: something of 0x60 bytes of an effect as it starts: zeros,
+NONE at 0x08 to 0x18, two colors 0xFF808080, two reals 1, the three numbers
+given at 0x04, 0x20 and 0x1C, and the kind 4 (0x00) for the last 1 */
+void __attribute__((stdcall)) effect_unknown_00176a50(
+	byte *data,
+	long first,
+	long second,
+	long third,
+	long fourth)
+{
+	memset(data, 0, 0x60);
+	*(long *)(data+0x04)= first;
+	*(short *)(data+0x18)= NONE;
+	*(long *)(data+0x08)= NONE;
+	*(long *)(data+0x10)= NONE;
+	*(long *)(data+0x0C)= NONE;
+	*(short *)(data+0x14)= NONE;
+	*(long *)(data+0x1C)= third;
+	*(unsigned long *)(data+0x54)= 0xFF808080;
+	*(unsigned long *)(data+0x58)= 0xFF808080;
+	*(real *)(data+0x40)= 1.0f;
+	*(real *)(data+0x44)= 1.0f;
+	*(long *)(data+0x20)= second;
+	if (fourth==1)
+	{
+		*(long *)data= 4;
+	}
+}
+
+/* 0x0017add0: of the particle systems of an effect (from its 0xFC, each to
+the next at 0x38), those of the kind (0x14) of its short at 0x5C get the
+bit 0 at 0x0C, 0 at 0x04 and one over its real at 0x64 (1 for none) at
+0x08; those of its short at 0x5E lose the bit */
+void effect_unknown_0017add0(
+	const byte *effect)
+{
+	long index= *(const long *)(effect+0xFC);
+
+	while (index!=NONE)
+	{
+		byte *system= PARTICLE_SYSTEM_GET(index);
+		long kind= *(const long *)(system+0x14);
+
+		if (kind==*(const short *)(effect+0x5C))
+		{
+			real time= *(const real *)(effect+0x64);
+
+			system[0x0C]|= 1;
+			*(real *)(system+0x04)= 0.0f;
+			*(real *)(system+0x08)= time>0.0f ? 1.0f/time : 1.0f;
+		}
+		else if (kind==*(const short *)(effect+0x5E))
+		{
+			system[0x0C]&= ~1;
+		}
+		index= *(const long *)(system+0x38);
+	}
+}
+
+/* 0x0016d940: the things (0x60 bytes, as many as at 0x48, at 0x4C) of
+something as entries of 0x20 bytes: their 16 bytes at 0x18, their 12 at
+0x0C, and 1 */
+void __attribute__((stdcall)) unknown_0016d940(
+	const byte *data,
+	byte *entries)
+{
+	long index;
+
+	for (index= 0; index<*(const long *)(data+0x48); index++)
+	{
+		const byte *thing= *(const byte *const *)(data+0x4C)+index*0x60;
+		byte *entry= entries+index*0x20;
+
+		memcpy(entry, thing+0x18, 16);
+		memcpy(entry+0x10, thing+0x0C, 12);
+		*(real *)(entry+0x1C)= 1.0f;
+	}
+}
+
+/* 0x0017ae50: the next effect location (0x3C bytes) of a chain (the index
+goes on to its 0x04) that is of a kind: 1 for those whose short at 0x02
+has the high bit, 3 for any, others for those without; NULL past the
+end */
+void *__attribute__((stdcall)) effect_location_unknown_0017ae50(
+	long unused,
+	long *index,
+	short kind)
+{
+	byte *location;
+	short flags;
+	boolean high;
+
+	if (*index==NONE)
+	{
+		return NULL;
+	}
+	location= (byte *)effect_location_data->data+(*index&0xFFFF)*0x3C;
+	*index= *(const long *)(location+0x04);
+	flags= *(const short *)(location+0x02);
+	high= flags!=NONE && flags<0;
+	if (kind==3 || high==(kind==1))
+	{
+		return location;
+	}
+
+	return effect_location_unknown_0017ae50(unused, index, kind);
+}

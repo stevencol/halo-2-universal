@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Seis funciones pequeñas del camino al menú: algo de un efecto que empieza, sistemas de partículas de dos clases, entradas de unas cosas, el siguiente lugar de un efecto, cosas de un componente de Havok y los lados de un plano
+
+Seis funciones pequeñas (692 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2905 funciones se pasa a 2911, el 25,84 % de
+las del juego (el 13,871 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effect_unknown_00176a50` | `0x00176a50` | `effects/effects.c` |
+| `effect_unknown_0017add0` | `0x0017add0` | `effects/effects.c` |
+| `unknown_0016d940` | `0x0016d940` | `effects/effects.c` |
+| `effect_location_unknown_0017ae50` | `0x0017ae50` | `effects/effects.c` |
+| `havok_component_unknown_001c4fc0` | `0x001c4fc0` | `physics/havok.c` |
+| `unknown_00132fd0` | `0x00132fd0` | `main/main.c` |
+
+### Lo que se sabe
+
+- algo de 0x60 bytes de un efecto como empieza; los sistemas de partículas de un efecto según dos clases; entradas de 0x20 bytes de unas cosas; el siguiente lugar de un efecto de una clase; cosas de un componente de Havok marcadas con el tiempo; y a qué lados de un plano está un punto.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 22 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cinco funciones pequeñas del camino al menú: si un vector es de largo uno, unos bits de banderas, la cuenta de la voz de un jugador, cuánto hay de algo en un valor y algo que empieza
 
 Cinco funciones pequeñas (542 bytes) en 5 archivos, de las que el juego ejecuta

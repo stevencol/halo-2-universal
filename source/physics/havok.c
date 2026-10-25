@@ -1350,3 +1350,35 @@ void *__attribute__((stdcall)) havok_unknown_001db120(
 
 	return havok_unknown_001dd560(found+4, third, 0x34);
 }
+
+/* 0x001c4fc0: the things (at 0x44 of what each of the elements at 0x70,
+0x60 bytes, as many as at 0x74, of a havok component has at 0x40) are
+marked (bit 0 of 0xAC, cleared first when their time at 0xA8 was another)
+with the time of the game */
+void havok_component_unknown_001c4fc0(
+	long havok_component_index)
+{
+	const byte *component;
+	long index;
+
+	if (havok_component_index==NONE)
+	{
+		return;
+	}
+	component= (const byte *)havok_component_data->data+(havok_component_index&0xFFFF)*0xA0;
+	for (index= 0; index<*(const long *)(component+0x74); index++)
+	{
+		const byte *element= *(const byte *const *)(component+0x70)+index*0x60;
+		byte *thing= *(byte *const *)(*(const byte *const *)(element+0x40)+0x44);
+
+		if (thing)
+		{
+			if (*(const unsigned long *)(thing+0xA8)!=game_time_globals->time)
+			{
+				*(short *)(thing+0xAC)= 0;
+			}
+			thing[0xAC]|= 1;
+			*(unsigned long *)(thing+0xA8)= game_time_globals->time;
+		}
+	}
+}

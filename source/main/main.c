@@ -11,6 +11,7 @@ Halo 1's main.c.
 
 #include "text/unicode_string_list.h"
 #include "main.h"
+#include <math.h>
 #include <string.h>
 
 #include "cache/geometry_cache.h"
@@ -1241,4 +1242,39 @@ unsigned long unknown_0016b500(
 	result= flags&0x400000 ? result|0x20 : result&0xFFDF;
 
 	return flags&0x200000 ? result|0x40 : result&0xFFBF;
+}
+
+/* 0x00132fd0: on which sides of the plane at 0x2A88 of something (when its
+flags at 0x2A60 have 0x200) a point is: behind and in front, both when
+nearer than a distance or without the plane */
+void __attribute__((stdcall)) unknown_00132fd0(
+	const byte *data,
+	const real *point,
+	boolean *in_front,
+	boolean *behind,
+	real distance)
+{
+	const real *plane= (const real *)(data+0x2A88);
+	real value;
+
+	if (*(const unsigned long *)(data+0x2A60)&0x200)
+	{
+		value= plane[2]*point[2] + plane[1]*point[1] + point[0]*plane[0] - plane[3];
+		*in_front= FALSE;
+		*behind= FALSE;
+		if (0.0f>value)
+		{
+			*behind= TRUE;
+		}
+		if (value>0.0f)
+		{
+			*in_front= TRUE;
+		}
+		if (distance<fabsf(value))
+		{
+			return;
+		}
+	}
+	*in_front= TRUE;
+	*behind= TRUE;
 }
