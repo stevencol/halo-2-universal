@@ -15,6 +15,9 @@ the name that the game gives to its table of data ("effect", "effect location").
 #include "memory/data.h"
 #include "objects/objects.h"
 #include "saved games/game_state.h"
+#include "math/real_math.h"
+#include "physics/bsp3d.h"
+#include "scenario/scenario.h"
 
 /* ---------- globals */
 
@@ -1018,4 +1021,78 @@ boolean effect_unknown_00176210(
 	cluster_index= *(const short *)(source+0x20);
 
 	return (unknown_004c56c0[cluster_index>>5]&(1UL<<(cluster_index&31)))!=0;
+}
+
+/* 0x001782a0: an effect goes to an event of its definition (0x38 bytes
+each, at 0x18, as many as at 0x14): the bit 0 at 0x02 off, the event at
+0x5C, 0 at 0x60 and a delay at 0x64 between those at 0x08 and 0x0C of the
+event (at random, with the seed of its definition, when they are not the
+same); its particle systems then follow (effect_unknown_0017add0) */
+void effect_unknown_001782a0(
+	long effect_index,
+	short event_index)
+{
+	byte *effect= datum_try_and_get(effect_data, effect_index);
+	const byte *definition;
+	const byte *event;
+
+	if (!effect)
+	{
+		return;
+	}
+	definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(effect+0x04)&0xFFFF].address;
+	if (event_index<0 || event_index>=*(const long *)(definition+0x14))
+	{
+		return;
+	}
+	event= *(const byte *const *)(definition+0x18)+event_index*0x38;
+	effect[0x02]&= ~1;
+	*(short *)(effect+0x5C)= event_index;
+	*(real *)(effect+0x60)= 0.0f;
+	if (*(const real *)(event+0x08)==*(const real *)(event+0x0C))
+	{
+		*(long *)(effect+0x64)= *(const long *)(event+0x08);
+	}
+	else
+	{
+		*(real *)(effect+0x64)= real_seed_random_range(effect_definition_get_random_seed(*(const long *)(effect+0x04)),
+			*(const real *)(event+0x08), *(const real *)(event+0x0C));
+	}
+	effect_unknown_0017add0(effect);
+}
+
+/* 0x001789f0: the location of an effect (0x1C: a leaf, a cluster and the
+structure bsp) from the first of its locations (from 0x7C, as many as at
+0x0C of its definition) that it has, at the point at 0x30 of it; whether it
+is in a cluster */
+boolean effect_unknown_001789f0(
+	byte *effect)
+{
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(effect+0x04)&0xFFFF].address;
+	const byte *location= NULL;
+	long index;
+
+	for (index= 0; index<*(const long *)(definition+0x0C); index++)
+	{
+		long location_index= *(const long *)(effect+0x7C+index*4);
+
+		if (location_index!=NONE)
+		{
+			location= effect_location_unknown_0017ae50((long)(uintptr_t)effect, &location_index, 0);
+			break;
+		}
+	}
+	if (!location || global_structure_bsp_index==NONE)
+	{
+		*(short *)(effect+0x22)= global_structure_bsp_index;
+		*(long *)(effect+0x1C)= NONE;
+		*(short *)(effect+0x20)= NONE;
+		return FALSE;
+	}
+	*(long *)(effect+0x1C)= bsp3d_test_point(global_bsp3d, 0, (const real_point3d *)(location+0x30));
+	*(short *)(effect+0x20)= *(const long *)(effect+0x1C)==NONE ? NONE
+		: *(const short *)(*(const byte *const *)((const byte *)global_structure_bsp+0x30)+*(const long *)(effect+0x1C)*8);
+	*(short *)(effect+0x22)= global_structure_bsp_index;
+
+	return *(const short *)(effect+0x20)!=NONE;
 }

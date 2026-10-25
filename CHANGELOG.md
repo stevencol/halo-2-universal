@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: un efecto que pasa a un evento y la ubicación de un efecto
+
+Dos funciones medianas (408 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3062 funciones se pasa a 3064, el 27,20 % de
+las del juego (el 14,806 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `effect_unknown_001782a0` | `0x001782a0` | `effects/effects.c` |
+| `effect_unknown_001789f0` | `0x001789f0` | `effects/effects.c` |
+
+### Lo que se sabe
+
+- un efecto pasa a un evento de su definición: el evento, cero y un retardo entre los dos del evento (al azar con la semilla de su definición si no son iguales), y luego sus sistemas de partículas; y la ubicación de un efecto (hoja, cluster y bsp) desde la primera de sus ubicaciones, y si está en un cluster. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: la matriz de un componente de havok desde la de su cuerpo y las matrices de los nodos de un modelo
 
 Dos funciones medianas (488 bytes) en 2 archivos, de las que el juego ejecuta

@@ -3911,3 +3911,5 @@ address,name,source,arguments,returns,convention
 00222e90,rumble_unknown_00222e90,source/sound/sound_manager.c,eax,int
 001d43d0,havok_unknown_001d43d0,source/physics/havok.c,eax ecx stack,void,stdcall
 0016d9c0,unknown_0016d9c0,source/game/game_unknown_00134d90.c,edx ecx eax stack stack stack,void,stdcall
+001782a0,effect_unknown_001782a0,source/effects/effects.c,edx edi,void
+001789f0,effect_unknown_001789f0,source/effects/effects.c,esi,bool
