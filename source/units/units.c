@@ -3036,3 +3036,93 @@ real biped_unknown_000dd7d0(
 
 	return change;
 }
+
+/* 0x000d58a0, of objects.c */
+void *__attribute__((stdcall)) object_unknown_000d58a0(const byte *datum, const byte *scenario);
+
+/* 0x000d59f0: whether a datum of the scenario makes an object: not with
+the bit 0 at 0x04; with a name (the short at 0x02), or a kind that is kept
+(unit_unknown_000d5990, of the tag of its palette entry), or a number of
+unit_unknown_000d5a70 that is not 1 */
+boolean unit_unknown_000d59f0(
+	const byte *datum)
+{
+	boolean creatable= !(datum[0x04]&1);
+	boolean named= *(const short *)(datum+0x02)!=NONE;
+	boolean kept= FALSE;
+	boolean other;
+
+	if (named)
+	{
+		kept= TRUE;
+	}
+	else
+	{
+		const byte *entry= object_unknown_000d58a0(datum, (const byte *)global_scenario);
+
+		if (entry && *(const long *)(entry+0x04)!=NONE)
+		{
+			kept= unit_unknown_000d5990(datum[0x2E], *(const long *)(entry+0x04));
+		}
+	}
+	other= named || unit_unknown_000d5a70(datum)!=1;
+
+	return creatable && (kept || other);
+}
+
+/* 0x00100f70: whether a weapon has none of its entries with a short from 1
+to 6 (weapon_unknown_00100880) and its definition has a short at 0x1FE
+that is not zero */
+boolean weapon_unknown_00100f70(
+	long weapon_index)
+{
+	const byte *definition= UNIT_DEFINITION_GET(UNIT_OBJECT_GET(weapon_index));
+
+	if (weapon_unknown_00100880(weapon_index, NONE))
+	{
+		return FALSE;
+	}
+
+	return *(const short *)(definition+0x1FE)!=0;
+}
+
+/* 0x001daea0, of havok.c */
+byte *__attribute__((stdcall)) havok_unknown_001daea0(const byte *graph, unsigned long id);
+
+/* whether the animation of a channel (its graph a tag at 0x00, the id of
+the animation at 0x04) has a bit of the short at 0x18; FALSE for no
+animation */
+static inline __attribute__((always_inline)) boolean unit_channel_animation_has_bit(
+	const byte *channel,
+	long bit)
+{
+	const byte *animation;
+
+	if (*(const short *)(channel+0x06)==NONE)
+	{
+		return FALSE;
+	}
+	animation= havok_unknown_001daea0(
+		(const byte *)(uintptr_t)global_tag_instances[*(const long *)channel&0xFFFF].address,
+		*(const unsigned long *)(channel+0x04));
+
+	return animation && ((1UL<<bit)&*(const unsigned short *)(animation+0x18));
+}
+
+/* 0x00111590: whether neither the animation of the first channel of a unit
+(in what is at the short at 0x12A) nor that of the channel at 0x9C of what
+is at the short at 0x33E has a bit */
+boolean __attribute__((stdcall)) unit_unknown_00111590(
+	long unit_index,
+	long bit)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	boolean result= !unit_channel_animation_has_bit(UNIT_UNKNOWN12A(unit), bit);
+
+	if (unit_channel_animation_has_bit(UNIT_UNKNOWN33E(unit)+0x9C, bit))
+	{
+		return FALSE;
+	}
+
+	return result;
+}

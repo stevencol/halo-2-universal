@@ -3,18 +3,18 @@
 Lista de lo hecho y lo que falta, para retomar otro día. La historia con
 detalle está en [CHANGELOG.md](CHANGELOG.md); aquí solo el resumen.
 
-**Última actualización:** 2026-10-22, al terminar el hito 858.
+**Última actualización:** 2026-10-22, al terminar el hito 859.
 
 ## Dónde estamos
 
-- **3009 funciones descompiladas de 11.265: el 26,71 % del juego** (el
-  14,323 % de los bytes de código). Las 11.265 son las de la lista de
+- **3013 funciones descompiladas de 11.265: el 26,75 % del juego** (el
+  14,339 % de los bytes de código). Las 11.265 son las de la lista de
   Ghidra, y solo se cuentan las que están en ella: hay más descompiladas
-  que Ghidra no separa como funciones propias (3332 en total).
-- Las 3332 están comprobadas contra el ejecutable original: las 1390 del
+  que Ghidra no separa como funciones propias (3336 en total).
+- Las 3336 están comprobadas contra el ejecutable original: las 1390 del
   hito 400 con la batería completa, y las de después con sus propias pruebas
   (`python tools\test_functions.py`).
-- Último hito: *Decompile four functions on the way to the main menu: Havok and the rasterizer* (ver `git log`).
+- Último hito: *Decompile four functions on the way to the main menu: units, weapons and Havok* (ver `git log`).
   El árbol de trabajo está limpio.
 - Además hay 527 funciones apuntadas pero sin descompilar (las que el código
   llama); 375 de ellas solo se conocen por su dirección (`unknown_...`).

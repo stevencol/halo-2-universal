@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones del camino al menú: si un dato del escenario hace un objeto, si un arma tiene una cuenta, si las animaciones de una unidad tienen un bit y lo que se quiere de una animación
+
+Cuatro funciones medianas (488 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3009 funciones se pasa a 3013, el 26,75 % de
+las del juego (el 14,339 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000d59f0` | `0x000d59f0` | `units/units.c` |
+| `weapon_unknown_00100f70` | `0x00100f70` | `units/units.c` |
+| `unit_unknown_00111590` | `0x00111590` | `units/units.c` |
+| `havok_unknown_001ddb40` | `0x001ddb40` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- si un dato del escenario hace un objeto (sin el bit 0 en 0x04; con nombre, un tipo que se guarda o un número que no es 1); si un arma no tiene entradas de 1 a 6 y su definición tiene algo en 0x1FE; si ni la animación del primer canal de una unidad ni la del canal en 0x9C tienen un bit; y los datos, tamaños y cuentas de una animación. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 13 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Cuatro funciones del camino al menú: la pantalla de mezcla de una animación, la animación de un canal y si tiene un bit, y un bitmap de un grupo pedido en una etapa
 
 Cuatro funciones medianas (424 bytes) en 2 archivos, de las que el juego ejecuta

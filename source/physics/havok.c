@@ -1982,3 +1982,26 @@ boolean havok_unknown_001c7300(
 
 	return !(havok_unknown_001c6440(channel)[0x18]&1);
 }
+
+/* 0x001ddb40: what is wanted of an animation of a graph (by an id as
+havok_unknown_001dd9d0 takes it): its data (havok_unknown_001dd7c0), where
+its sizes are (0x3C), the byte at 0x13, the byte at 0x11 and the short at
+0x14; nothing for no animation */
+void __attribute__((stdcall)) havok_unknown_001ddb40(
+	byte *data,
+	const byte *graph,
+	unsigned long id)
+{
+	const byte *animation;
+
+	if ((short)(id>>16)==NONE)
+	{
+		return;
+	}
+	animation= havok_unknown_001daea0(graph, id);
+	*(byte **)data= havok_unknown_001dd7c0(graph, id);
+	*(const byte **)(data+0x04)= animation+0x3C;
+	data[0x08]= animation[0x13];
+	data[0x09]= animation[0x11];
+	*(short *)(data+0x0A)= *(const short *)(animation+0x14);
+}
