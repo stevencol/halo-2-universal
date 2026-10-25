@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: cómo está uno de los cuatro en una sesión, los colores de un objeto en su caché y la primera entrada de un sonido de algo
+
+Tres funciones medianas (623 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2940 funciones se pasa a 2943, el 26,13 % de
+las del juego (el 14,050 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_voice_unknown_000646b0` | `0x000646b0` | `networking/game_voice.c` |
+| `cached_object_render_state_unknown_0003dd10` | `0x0003dd10` | `game/game_unknown_0002b4a0.c` |
+| `sound_unknown_0018d1c0` | `0x0018d1c0` | `sound/sound_manager.c` |
+
+### Lo que se sabe
+
+- cómo está uno de los cuatro de la voz en una sesión (0 a 6); los colores de un objeto guardados en su estado de render; y la primera entrada de `unknown_004ed28c` de algo.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: quién lleva a una unidad en un asiento y cuatro nombres de algo con sus valores por defecto
 
 Dos funciones medianas (498 bytes) en 2 archivos, de las que el juego ejecuta

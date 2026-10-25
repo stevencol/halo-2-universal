@@ -14163,3 +14163,25 @@ long __attribute__((stdcall)) sound_unknown_00188f90(
 
 	return index;
 }
+
+/* 0x0018d1c0: the first of unknown_004ed28c in use whose thing (0x0C) is
+one and that has the bit 5 of its byte at 0x04; NONE if none */
+long __attribute__((stdcall)) sound_unknown_0018d1c0(
+	long thing)
+{
+	struct data_array *data= unknown_004ed28c;
+	long absolute_index= data_next_absolute_index(data, 0);
+
+	while (absolute_index!=NONE)
+	{
+		const byte *entry= (const byte *)data->data+absolute_index*0x18;
+
+		if (*(const long *)(entry+0x0C)==thing && ((entry[4]>>5)&1))
+		{
+			return (long)*(const short *)entry<<16 | absolute_index;
+		}
+		absolute_index= data_next_absolute_index(data, absolute_index+1);
+	}
+
+	return NONE;
+}

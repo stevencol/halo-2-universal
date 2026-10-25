@@ -24,6 +24,7 @@ are the names of its functions.
 #include "networking/simulation_world.h"
 #include "networking/network_life_cycle.h"
 #include "networking/network_session.h"
+#include "networking/online_tasks.h"
 #include "saved games/saved_game_files.h"
 
 /* ---------- prototypes of functions not decompiled yet */
@@ -2084,4 +2085,50 @@ boolean game_voice_unknown_00159170(
 	value= (real)unknown_004e9af0[index]*game_time_globals->seconds_per_tick*4.0f;
 
 	return !(value>=1.0f);
+}
+
+/* 0x000646b0: how one of the four (unknown_004cd904) is in a session: 0
+for none (or a bad one, 0xBAD00000 at 0x09, when the console is logged on);
+1 out of the states 3 to 8 of the session; 2 or 3 (by a byte from 0xCC)
+without a player there; 4 for a player without a number; 5 or 6 for one
+whose number and 0x90 bytes and long are not or are those of the four */
+long game_voice_unknown_000646b0(
+	long index,
+	const byte *session)
+{
+	const byte *entry= unknown_004cd904[index];
+	long state;
+	long player_index;
+	const byte *player;
+
+	if (!entry[0])
+	{
+		return 0;
+	}
+	if (unknown_00467214!=NONE && online_tasks_get_logon_state(unknown_00467214)==1 && *(const unsigned long *)(entry+0x09)==0xBAD00000)
+	{
+		return 0;
+	}
+	state= *(const long *)(session+0x741C);
+	if (state<=2 || state>8)
+	{
+		return 1;
+	}
+	player_index= *(const long *)(session+0x154+(*(const long *)(session+0x72D8)*0x43+index)*4);
+	if (player_index==NONE)
+	{
+		return entry[0xCC+*(const long *)(session+0x10)] ? 3 : 2;
+	}
+	player= session+0x1120+player_index*0x13C;
+	if (*(const long *)(player+0x14)==NONE)
+	{
+		return 4;
+	}
+	if (*(const long *)(player+0x14)==*(const long *)(entry+0x10) && !memcmp(player+0x18, entry+0x14, 0x90)
+		&& *(const long *)(player+0x138)==*(const long *)(entry+0xA4))
+	{
+		return 6;
+	}
+
+	return 5;
 }

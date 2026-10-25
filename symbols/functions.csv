@@ -3790,3 +3790,6 @@ address,name,source,arguments,returns,convention
 0016e210,game_unknown_0016e210,source/game/game_unknown_0016efb0.c,ecx edi,bool
 000cb6d0,unit_unknown_000cb6d0,source/units/units.c,eax,int
 001cc2f0,havok_unknown_001cc2f0,source/physics/havok.c,eax ecx edx esi stack stack,void,stdcall
+000646b0,game_voice_unknown_000646b0,source/networking/game_voice.c,eax ecx,int
+0003dd10,cached_object_render_state_unknown_0003dd10,source/game/game_unknown_0002b4a0.c,stack stack,void,stdcall
+0018d1c0,sound_unknown_0018d1c0,source/sound/sound_manager.c,stack,int,stdcall

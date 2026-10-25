@@ -11,6 +11,8 @@ the file is only the address of its first function.
 #include "cseries/cseries.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
+#include "bitmaps/bitmap_utilities.h"
+#include "objects/objects.h"
 #include "cache/cache_files.h"
 #include "scenario/scenario.h"
 
@@ -339,4 +341,41 @@ boolean __attribute__((stdcall)) unknown_000460d0(
 	}
 
 	return result;
+}
+
+boolean object_unknown_000bad50(long object_index, long index, unsigned long *result);
+
+/* 0x0003dd10: the cached render state of an object (its 0xCC; when asked,
+or when its definition has the bit 0 at 0x1C) keeps the colors the object
+has (as object_unknown_000bad50 gives them, up to four) from 0xA8, and how
+many at 0xB8 */
+void __attribute__((stdcall)) cached_object_render_state_unknown_0003dd10(
+	long object_index,
+	boolean always)
+{
+	const byte *object= (const byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+	long state_index= *(const long *)(object+0xCC);
+	byte *state;
+	long index;
+
+	if (state_index==NONE)
+	{
+		return;
+	}
+	if (!always && !(((const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address)[0x1C]&1))
+	{
+		return;
+	}
+	state= (byte *)cached_object_render_state_data->data+((state_index&0xFFFF)<<8);
+	state[0xB8]= 0;
+	for (index= 0; index<4; index++)
+	{
+		real_rgb_color color;
+
+		if (object_unknown_000bad50(object_index, index, (unsigned long *)&color))
+		{
+			*(pixel32 *)(state+0xA8+index*4)= real_rgb_color_to_pixel32(&color);
+			state[0xB8]++;
+		}
+	}
 }
