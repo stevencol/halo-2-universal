@@ -7,6 +7,7 @@ file is a guess, by the names that the game gives to its four tables of data
 */
 
 #include "cseries/cseries.h"
+#include "bitmaps/bitmap_utilities.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
 #include <string.h>
@@ -146,4 +147,87 @@ short __attribute__((stdcall)) particle_systems_unknown_00172bb0(
 	memset(entry+0x2C, 0, 0x40);
 
 	return index;
+}
+
+/* 0x0013b390, of the functions of tags */
+real unknown_0013b390(const byte *function, real input, real range);
+
+/* 0x00246cd0: the value of a property of a particle: its function (at
+0x08) at two of some values (by the shorts at 0x00 and 0x02), taken to 0..1
+and to its bounds unless the function says not to; then, by the short at
+0x04, the value of the short at 0x06 added to it (1) or times it (2) */
+real particle_unknown_00246cd0(
+	const byte *property,
+	const real *values)
+{
+	const byte *data;
+	real result= unknown_0013b390(property+0x08, values[*(const short *)property], values[*(const short *)(property+0x02)]);
+	short index;
+
+	data= *(const byte *const *)(property+0x08+4);
+	if (!(data[1]&0xF0))
+	{
+		if (0.0f>result)
+		{
+			result= 0.0f;
+		}
+		else if (result>1.0f)
+		{
+			result= 1.0f;
+		}
+		result= (*(const real *)(data+8)-*(const real *)(data+4))*result + *(const real *)(data+4);
+	}
+	index= *(const short *)(property+0x06);
+	if (index==NONE || index<0)
+	{
+		return result;
+	}
+	switch (*(const unsigned short *)(property+0x04))
+	{
+	case 1:
+		return values[index]+result;
+	case 2:
+		return values[index]*result;
+	}
+
+	return result;
+}
+
+/* 0x00175a80: the color at 0x50 of a particle system: the first color
+times the second when multiplied and tinted, or the first; half the second
+when tinted and not multiplied, or nothing */
+void __attribute__((stdcall)) particle_unknown_00175a80(
+	boolean tinted,
+	pixel32 color,
+	pixel32 tint,
+	byte *particle_system,
+	boolean multiplied)
+{
+	real_rgb_color first;
+	real_rgb_color second;
+
+	if (!multiplied)
+	{
+		if (!tinted)
+		{
+			return;
+		}
+		pixel32_to_real_rgb_color(tint, &first);
+		first.red*= 0.5f;
+		first.green*= 0.5f;
+		first.blue*= 0.5f;
+		*(pixel32 *)(particle_system+0x50)= real_rgb_color_to_pixel32(&first);
+		return;
+	}
+	if (!tinted)
+	{
+		*(pixel32 *)(particle_system+0x50)= color;
+		return;
+	}
+	pixel32_to_real_rgb_color(color, &first);
+	pixel32_to_real_rgb_color(tint, &second);
+	first.red*= second.red;
+	first.green*= second.green;
+	first.blue*= second.blue;
+	*(pixel32 *)(particle_system+0x50)= real_rgb_color_to_pixel32(&first);
 }

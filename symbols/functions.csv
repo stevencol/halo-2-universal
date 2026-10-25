@@ -3876,3 +3876,5 @@ address,name,source,arguments,returns,convention
 000b7a40,object_unknown_000b7a40,source/objects/objects.c,stack stack,pointer,stdcall
 0016dce0,unknown_0016dce0,source/math/random_math.c,edx ebx,int
 0010eaf0,unit_unknown_0010eaf0,source/units/units.c,eax,bool
+00246cd0,particle_unknown_00246cd0,source/effects/particle_systems.c,esi ebx,real:xmm0
+00175a80,particle_unknown_00175a80,source/effects/particle_systems.c,eax ecx edi esi stack,void,stdcall

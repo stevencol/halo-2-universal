@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: el valor de una propiedad de una partícula y el color de un sistema de partículas
+
+Dos funciones medianas (367 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3027 funciones se pasa a 3029, el 26,89 % de
+las del juego (el 14,443 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `particle_unknown_00246cd0` | `0x00246cd0` | `effects/particle_systems.c` |
+| `particle_unknown_00175a80` | `0x00175a80` | `effects/particle_systems.c` |
+
+### Lo que se sabe
+
+- el valor de una propiedad de una partícula (su función en dos de unos valores, llevada a 0..1 y a sus límites, y luego sumada o multiplicada por otro valor); y el color de un sistema de partículas: el primero por el segundo, el primero, o la mitad del segundo. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: una de varias opciones elegida al azar por sus pesos, y las vibraciones de un objeto que van un tick hacia una
 
 Dos funciones medianas (532 bytes) en 2 archivos, de las que el juego ejecuta
