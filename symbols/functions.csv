@@ -2184,7 +2184,7 @@ address,name,source,arguments,returns,convention
 000847d0,unknown_000847d0,,stack stack,void,stdcall
 0014d040,player_action_clear,source/game/player_action.c,edx,void
 00084750,simulation_player_new,source/networking/simulation_player.c,eax ecx edx esi stack stack stack,void,stdcall
-00155710,unknown_00155710,,eax,void
+00155710,unknown_00155710,source/game/game_unknown_001552e0.c,eax,void
 00084990,simulation_player_get_action,source/networking/simulation_player.c,stack stack,bool,stdcall
 0008b7f0,simulation_player_actions_take,source/networking/simulation_player.c,ecx ebx stack,bool,stdcall
 000825e0,simulation_player_action_unpack,source/networking/simulation_player.c,edi esi,void
@@ -3841,3 +3841,7 @@ address,name,source,arguments,returns,convention
 0007f790,game_engine_player_colors,source/game/game_engine.c,edi esi stack stack,void,stdcall
 001dd9d0,havok_unknown_001dd9d0,source/physics/havok.c,edx stack,void,stdcall
 00016f60,rasterizer_unknown_00016f60,source/rasterizer/rasterizer_xbox.c,esi stack,void,stdcall
+001462e0,seed_random_direction3d,source/math/random_math.c,edx eax,pointer
+000d5260,object_unknown_000d5260,source/objects/objects.c,edx esi,pointer
+00014390,rasterizer_unknown_00014390,source/rasterizer/rasterizer_xbox.c,esi edi xmm2,bool
+0023c110,unknown_0023c110,,stack stack stack,void,stdcall

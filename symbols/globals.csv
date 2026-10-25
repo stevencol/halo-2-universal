@@ -805,3 +805,6 @@ address,name,source
 004e925c,unknown_004e925c,source/input/input_abstraction.c
 004e9264,unknown_004e9264,source/input/input_abstraction.c
 004850c8,unknown_004850c8,source/cseries/unknown_0051f40c.c
+004417f0,random_directions,source/math/random_math.c
+0051f3c8,unknown_0051f3c8,source/rasterizer/rasterizer_xbox.c
+00485af4,unknown_00485af4,source/rasterizer/rasterizer_xbox.c

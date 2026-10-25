@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones del camino al menú: una dirección al azar, el dato del escenario de un tipo de objeto, la textura pedida en una etapa y uno de cuatro que vuelve a empezar
+
+Cuatro funciones pequeñas (255 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2992 funciones se pasa a 2996, el 26,60 % de
+las del juego (el 14,279 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `seed_random_direction3d` | `0x001462e0` | `math/random_math.c` |
+| `object_unknown_000d5260` | `0x000d5260` | `objects/objects.c` |
+| `rasterizer_unknown_00014390` | `0x00014390` | `rasterizer/rasterizer_xbox.c` |
+| `unknown_00155710` | `0x00155710` | `game/game_unknown_001552e0.c` |
+
+### Lo que se sabe
+
+- una de las 1026 direcciones de una tabla elegida con la siguiente semilla (`seed_random_direction3d`, el nombre de Halo 1); el dato del escenario de un tipo de objeto por su índice, o NULL; la textura de un bitmap pedida en una etapa y el tamaño del bitmap guardado; y uno de los cuatro de `unknown_004e8c38` que vuelve a empezar. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- `unknown_0023c110` solo se apunta; queda sin descompilar.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: una animación y las que la siguen pedidas, y las texturas de las etapas de un shader
 
 Dos funciones medianas (378 bytes) en 2 archivos, de las que el juego ejecuta

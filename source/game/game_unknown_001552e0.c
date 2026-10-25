@@ -62,3 +62,27 @@ void GAME_STATE_PROC game_unknown_001552e0_after_load(
 	unknown_00155380();
 	unknown_00155a30(*unknown_004e8c34);
 }
+
+/* 0x0023c110: what each of the four is given to do (of three arguments) */
+void __attribute__((stdcall)) unknown_0023c110(long, long, long);
+
+/* 0x00155710: when the long at 0x04 is zero, one of the four (0x140 bytes
+each, from 0x0C) starts over: the short at 0x58 and the reals at 0x10 and
+0x14 to zero, unknown_0023c110 at 0x0C, 1 at 0x10C and the byte at 0x108 to
+zero */
+void unknown_00155710(
+	long index)
+{
+	byte *entry= unknown_004e8c38+0x0C+index*0x140;
+
+	if (*(const long *)(unknown_004e8c38+0x04)!=0)
+	{
+		return;
+	}
+	*(short *)(entry+0x58)= 0;
+	*(float *)(entry+0x10)= 0.0f;
+	*(float *)(entry+0x14)= 0.0f;
+	*(void (__attribute__((stdcall)) **)(long, long, long))(entry+0x0C)= unknown_0023c110;
+	*(float *)(entry+0x10C)= 1.0f;
+	entry[0x108]= 0;
+}

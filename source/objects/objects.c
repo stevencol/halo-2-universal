@@ -1843,3 +1843,29 @@ void object_unknown_000b91d0(
 		memcpy(up, object+0x7C, 12);
 	}
 }
+
+/* 0x000d5260: the datum of the scenario of an object type, by its index (in
+the block of the scenario at 0x0A of the type, with the size at 0x0E), or
+NULL if the type has no such block (or no palette at 0x0C) or the index is
+not one of the block's */
+void *object_unknown_000d5260(
+	long type,
+	long index)
+{
+	const byte *definition= object_type_definitions[type];
+	const byte *block;
+	long count;
+
+	if (*(const short *)(definition+0x0A)==NONE || *(const short *)(definition+0x0C)==NONE)
+	{
+		return NULL;
+	}
+	block= (const byte *)global_scenario+*(const short *)(definition+0x0A);
+	count= *(const long *)block;
+	if (index<0 || index>count-1)
+	{
+		return NULL;
+	}
+
+	return *(byte *const *)(block+4)+*(const short *)(definition+0x0E)*index;
+}

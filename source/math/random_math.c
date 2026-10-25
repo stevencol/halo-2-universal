@@ -81,3 +81,22 @@ void random_math_initialize(
 	global_random_seed_reference[0]= 0x78A8;
 	global_random_seed_reference[1]= (unsigned long)random_seed_from_time();
 }
+
+/* 0x004417f0: 1026 directions (of length one) to pick one of at random */
+real_vector3d random_directions[1026];
+
+/* 0x001462e0: a direction picked at random, as Halo 1's
+seed_random_direction3d: the high 16 bits of the next seed, times 1026, give
+one of random_directions */
+real_vector3d *seed_random_direction3d(
+	unsigned long *seed,
+	real_vector3d *direction)
+{
+	short index;
+
+	*seed= *seed*RANDOM_A + RANDOM_C;
+	index= (short)(((*seed>>16)*1026)>>16);
+	*direction= random_directions[index];
+
+	return direction;
+}

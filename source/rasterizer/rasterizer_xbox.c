@@ -721,3 +721,26 @@ void __attribute__((stdcall)) rasterizer_unknown_00016f60(
 		*(real *)(slot+0x10)= 3.0f;
 	}
 }
+
+/* 0x0051f3c8: the textures of the four stages, those set and (from 0x10)
+those wanted. 0x00485af4: the widths of their bitmaps, and from 0x10 their
+heights */
+long unknown_0051f3c8[8];
+long unknown_00485af4[8];
+
+/* 0x00014390: the texture of a bitmap is wanted at a stage, and the size of
+the bitmap kept for it; nothing without a bitmap. Always TRUE */
+boolean rasterizer_unknown_00014390(
+	short stage,
+	struct bitmap_data *bitmap,
+	real mip_bias)
+{
+	if (bitmap)
+	{
+		unknown_0051f3c8[4+stage]= (long)shell_bitmap_get_texture_blocking(bitmap, mip_bias);
+		unknown_00485af4[stage]= *(const short *)((const byte *)bitmap+4);
+		unknown_00485af4[4+stage]= *(const short *)((const byte *)bitmap+6);
+	}
+
+	return TRUE;
+}
