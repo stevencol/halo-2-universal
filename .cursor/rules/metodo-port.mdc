@@ -1,0 +1,8 @@
+---
+description: Método de descompilación y pruebas del proyecto
+alwaysApply: true
+---
+
+Antes de trabajar, lee y sigue `AGENTS.md` (sobre todo las «REGLAS
+OBLIGATORIAS»). El método completo está en `docs/metodo-port/` (README,
+requirements, design y tasks).

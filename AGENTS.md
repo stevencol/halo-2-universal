@@ -1,8 +1,13 @@
-# Instrucciones para agentes (Claude Code, Kiro, Cline, Cursor…)
+# Instrucciones para agentes (Claude Code, Cursor, opencode, Kiro, Cline…)
 
 Descompilación del Halo 2 original de Xbox, basada en
 cybersecurity/halo-ce-universal. Antes de empezar, leer `ESTADO.md` (dónde
 está el proyecto y siguientes pasos) y la última entrada de `CHANGELOG.md`.
+
+El método completo (prueba diferencial, mutaciones, cobertura, casos
+grabados con el emulador, batería) y las mejoras pendientes están en
+`docs/metodo-port/` (`README.md`, `requirements.md`, `design.md`,
+`tasks.md`). Las reglas de abajo mandan sobre el spec.
 
 ## REGLAS OBLIGATORIAS
 
