@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cinco funciones pequeñas del camino al menú: el mayor de dos reales, una fila de bits, un punto para un árbol de sistemas de partículas, un sistema que sale de un efecto y un tiempo de un objeto
+
+Cinco funciones pequeñas (357 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2871 funciones se pasa a 2876, el 25,53 % de
+las del juego (el 13,748 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_00224350` | `0x00224350` | `physics/havok.c` |
+| `unknown_00249d10` | `0x00249d10` | `effects/effects.c` |
+| `particle_system_unknown_00175180` | `0x00175180` | `effects/effects.c` |
+| `effect_unknown_0017af80` | `0x0017af80` | `effects/effects.c` |
+| `object_unknown_000e0d70` | `0x000e0d70` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- el mayor de dos reales de una definición; una fila de bits copiada; un punto para un sistema de partículas y todos los de debajo; un sistema de partículas que sale de la lista de un efecto y de su par; y un tiempo de un objeto.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 15 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-24 — Cinco funciones pequeñas del camino al menú: 0x50 bytes copiados, un nodo de una lista, una entrada de una cadena, memoria del estado del juego y un tiempo de la interfaz
 
 Cinco funciones pequeñas (162 bytes) en 4 archivos, de las que el juego ejecuta

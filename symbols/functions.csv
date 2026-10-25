@@ -1688,7 +1688,7 @@ address,name,source,arguments,returns,convention
 00220790,sound_console_set_listener,source/sound/sound_manager.c,stack,void,stdcall
 0037d598,unknown_0037d598,,stack stack stack stack stack,void
 0037d54e,unknown_0037d54e,,stack stack stack stack stack stack stack stack,void
-00249d10,unknown_00249d10,,eax ecx stack,void
+00249d10,unknown_00249d10,source/effects/effects.c,eax ecx stack,void,stdcall
 00249c90,unknown_00249c90,,eax edx stack stack,void
 0018cac0,sound_unknown_0018cac0,source/sound/sound_manager.c,ecx,real:xmm0
 0031bc70,unknown_0031bc70,,ecx,pointer
@@ -3726,3 +3726,7 @@ address,name,source,arguments,returns,convention
 00173350,particle_systems_unknown_00173350,source/effects/particle_systems.c,eax esi edx,short
 00139130,game_unknown_00139130,source/game/game_unknown_0013bf00.c,,void
 0014a250,user_interface_unknown_0014a250,source/interface/user_interface.c,,bool
+00224350,havok_unknown_00224350,source/physics/havok.c,ecx,real
+00175180,particle_system_unknown_00175180,source/effects/effects.c,ecx stack,void,stdcall
+0017af80,effect_unknown_0017af80,source/effects/effects.c,edi esi,void
+000e0d70,object_unknown_000e0d70,source/objects/objects.c,eax stack,bool,stdcall

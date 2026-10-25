@@ -1186,3 +1186,22 @@ real havok_unknown_0022cb90(
 
 	return (real)total*1.0344942e-06f;
 }
+
+/* 0x00224350: the bigger of the two reals (0x04 and 0x08) of what the thing
+of something points to at 0x48; 0 and 1 when its byte at 0x01 has some of
+its high bits */
+real havok_unknown_00224350(
+	const byte *data)
+{
+	const byte *definition= *(const byte *const *)(*(const byte *const *)(data+0x08)+0x48);
+	real low= 0.0f;
+	real high= 1.0f;
+
+	if (!(definition[1]>>4))
+	{
+		low= *(const real *)(definition+0x04);
+		high= *(const real *)(definition+0x08);
+	}
+
+	return low>high ? low : high;
+}

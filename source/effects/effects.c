@@ -594,3 +594,64 @@ void effect_unknown_00178b80(
 		}
 	}
 }
+
+/* 0x00249d10: the row of a cluster of the bits of the structure bsp (at
+0x228: how many bits at 0x00, the rows at 0x18) is copied; 16 bytes of zeros
+when it has none (its long at 0x224) */
+void __attribute__((stdcall)) unknown_00249d10(
+	const byte *structure_bsp,
+	unsigned long *openings,
+	long cluster_index)
+{
+	const byte *bits;
+	long count;
+	long longs;
+
+	if (*(const long *)(structure_bsp+0x224)<=0)
+	{
+		openings[0]= 0;
+		openings[1]= 0;
+		openings[2]= 0;
+		openings[3]= 0;
+		return;
+	}
+	bits= *(const byte *const *)(structure_bsp+0x228);
+	count= *(const long *)bits;
+	if (count<=0)
+	{
+		return;
+	}
+	longs= (count+31)>>5;
+	memcpy(openings, *(const unsigned long *const *)(bits+0x18)+longs*cluster_index, longs*4);
+}
+
+/* 0x00175180: a particle system and all those under it (from its 0x40,
+each to the next at 0x38) get a point at 0x1C */
+void __attribute__((stdcall)) particle_system_unknown_00175180(
+	byte *element,
+	const unsigned long *point)
+{
+	long index= *(const long *)(element+0x40);
+
+	*(unsigned long *)(element+0x1C)= point[0];
+	*(unsigned long *)(element+0x20)= point[1];
+	while (index!=NONE)
+	{
+		byte *other= PARTICLE_SYSTEM_GET(index);
+
+		particle_system_unknown_00175180(other, point);
+		index= *(const long *)(other+0x38);
+	}
+}
+
+/* 0x0017af80: a particle system leaves the list of an effect (its last at
+0xFC, its first at 0x100) and the pair of the effect that has it */
+void effect_unknown_0017af80(
+	long effect_index,
+	long particle_system_index)
+{
+	byte *effect= (byte *)effect_data->data+(effect_index&0xFFFF)*0x190;
+
+	particle_system_list_remove(PARTICLE_SYSTEM_GET(particle_system_index), (long *)(effect+0xFC), (long *)(effect+0x100));
+	effect_unknown_00178b80(effect_index, particle_system_index);
+}

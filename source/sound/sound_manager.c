@@ -1658,7 +1658,7 @@ clusters of the two sides of an opening and what an opening says, as a real;
 0x00020670 calls 0x0031bc70, which does nothing, with each of the two sides;
 0x00221e30 works out a query */
 struct sound_query;
-void unknown_00249d10(const byte *structure_bsp, unsigned long *openings, long cluster_index);
+void __attribute__((stdcall)) unknown_00249d10(const byte *structure_bsp, unsigned long *openings, long cluster_index);
 void unknown_00249c90(unsigned long *first, const byte *structure_bsp, long opening_index, unsigned long *second);
 real sound_unknown_0018cac0(long said);
 void __attribute__((stdcall)) array_construct_elements(void *array, unsigned long size, long count,

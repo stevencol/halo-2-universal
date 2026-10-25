@@ -1462,3 +1462,19 @@ void object_unknown_000ba3d0(
 	place[3]= 0;
 	object_wake(object_index);
 }
+
+/* 0x000e0d70: when an object has a number at 0x3AA, that by 0.15 of the
+seconds of a tick; whether it has */
+boolean __attribute__((stdcall)) object_unknown_000e0d70(
+	long object_index,
+	real *value)
+{
+	signed char number= (signed char)OBJECT_DATA(object_index)[0x3AA];
+
+	if (!number)
+	{
+		return FALSE;
+	}
+	*value= game_time_globals->seconds_per_tick*0.15f*(real)number;
+	return TRUE;
+}
