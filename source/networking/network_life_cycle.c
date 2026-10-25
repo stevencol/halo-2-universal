@@ -1970,3 +1970,46 @@ boolean __attribute__((stdcall)) network_session_unknown_000656e0(
 	}
 	return TRUE;
 }
+
+/* 0x004ce1d4 and 0x004ce1dc: two numbers (their low shorts) a random number
+is taken below */
+long unknown_004ce1d4;
+long unknown_004ce1dc;
+
+/* 0x00070190: something of the network (0xA98 bytes) is made for its owner
+(which points back to it at 0x1C): the kind 6, zeros, NONE, and two random
+numbers below those two */
+void network_unknown_00070190(
+	byte *data,
+	byte *owner)
+{
+	unsigned long seed;
+
+	*(byte **)(data+0x08)= owner;
+	*(long *)(data+0x04)= 6;
+	data[0x0D]= 1;
+	data[0x0C]= 0;
+	*(byte **)(owner+0x1C)= data;
+	data[0x97C]= 0;
+	*(long *)(data+0xA08)= 0;
+	*(long *)(data+0xA0C)= 0;
+	*(long *)(data+0xA1C)= 0;
+	*(long *)(data+0x9EC)= NONE;
+	*(long *)(data+0x9F0)= NONE;
+	*(long *)(data+0x9F4)= NONE;
+	*(long *)(data+0x978)= 1;
+	seed= global_random_seed_reference[1]*0x19660D+0x3C6EF35F;
+	global_random_seed_reference[1]= seed;
+	*(long *)(data+0x96C)= (short)((unsigned long)((long)(seed>>16)*(long)(short)unknown_004ce1dc)>>16);
+	seed= global_random_seed_reference[1]*0x19660D+0x3C6EF35F;
+	global_random_seed_reference[1]= seed;
+	*(long *)(data+0x974)= (short)((unsigned long)((long)(seed>>16)*(long)(short)unknown_004ce1d4)>>16);
+	data[0xA64]= 0;
+	*(long *)(data+0xA80)= 0;
+	*(long *)(data+0xA84)= 0;
+	*(long *)(data+0xA88)= 0;
+	data[0xA78]= 0;
+	*(long *)(data+0xA8C)= 0;
+	*(long *)(data+0xA90)= 0;
+	*(long *)(data+0xA94)= 0;
+}

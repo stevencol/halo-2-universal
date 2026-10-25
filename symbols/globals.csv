@@ -764,3 +764,5 @@ address,name,source
 004ba025,unknown_004ba025,source/game/game_unknown_0002b4a0.c
 004ba028,unknown_004ba028,source/game/game_unknown_0002b4a0.c
 004ba02c,unknown_004ba02c,source/game/game_unknown_0002b4a0.c
+004ce1d4,unknown_004ce1d4,source/networking/network_life_cycle.c
+004ce1dc,unknown_004ce1dc,source/networking/network_life_cycle.c

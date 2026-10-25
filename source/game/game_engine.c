@@ -944,3 +944,71 @@ unsigned long game_engine_unknown_00168ae0(
 {
 	return (flags>>23)&0x3F;
 }
+
+/* 0x002797a0: the next of a walk over two lists of something (at 0x0C: the
+first list at 0x08, as many as at 0x0C, the second at 0x14, as many as at
+0x18; each element counts at 0x40): the element (0x04) and the place in it
+(0x08) go on, NONE to start. The byte at 0x01 says the first list is done;
+the second is walked only for the kinds (0x10) 1 and 2, and 1 skips the
+first. Whether there is a next */
+boolean unknown_002797a0_next(
+	byte *iterator)
+{
+	long *element= (long *)(iterator+0x04);
+	long *place= (long *)(iterator+0x08);
+	const byte *lists= *(const byte *const *)(iterator+0x0C);
+	long kind= *(const long *)(iterator+0x10);
+	boolean result= FALSE;
+
+	if (*element==NONE)
+	{
+		*element= 0;
+		*place= 0;
+		if (kind==1)
+		{
+			iterator[1]= TRUE;
+		}
+	}
+	else
+	{
+		(*place)++;
+	}
+	if (!iterator[1])
+	{
+		while (*element<*(const long *)(lists+0x0C))
+		{
+			if (*place<*(const long *)((*(const byte *const *const *)(lists+0x08))[*element]+0x40))
+			{
+				result= TRUE;
+				break;
+			}
+			(*element)++;
+			*place= 0;
+		}
+		if (!result)
+		{
+			iterator[1]= TRUE;
+			*element= 0;
+			*place= 0;
+		}
+		if (!iterator[1])
+		{
+			return result;
+		}
+	}
+	if ((kind==2 || kind==1) && *element<*(const long *)(lists+0x18))
+	{
+		while (*place>=*(const long *)((*(const byte *const *const *)(lists+0x14))[*element]+0x40))
+		{
+			(*element)++;
+			*place= 0;
+			if (*element>=*(const long *)(lists+0x18))
+			{
+				return result;
+			}
+		}
+		result= TRUE;
+	}
+
+	return result;
+}

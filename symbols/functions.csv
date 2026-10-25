@@ -3688,3 +3688,7 @@ address,name,source,arguments,returns,convention
 0014b360,scenario_unknown_0014b360,source/scenario/scenario.c,ecx edx ebx edi,void
 00162c50,player_unknown_00162c50,source/main/main.c,eax stack,bool,stdcall
 00101690,unit_unknown_00101690,source/units/units.c,stack,bool,stdcall
+002797a0,unknown_002797a0_next,source/game/game_engine.c,ecx,bool
+002276d0,havok_unknown_002276d0,source/physics/havok.c,eax stack,int,stdcall
+001caed0,havok_unknown_001caed0,source/physics/havok.c,eax,void
+00070190,network_unknown_00070190,source/networking/network_life_cycle.c,eax ecx,void

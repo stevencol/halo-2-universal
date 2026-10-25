@@ -1074,3 +1074,51 @@ void havok_unknown_001ccba0(
 	havok_unknown_clear(data+0x20);
 	havok_unknown_clear(data+0x40);
 }
+
+/* whether the object of a havok component is of the kind 0 */
+static inline __attribute__((always_inline)) boolean havok_component_of_kind0(
+	long havok_component_index)
+{
+	long object_index;
+
+	if (havok_component_index==NONE)
+	{
+		return FALSE;
+	}
+	object_index= *(const long *)((const byte *)havok_component_data->data+(havok_component_index&0xFFFF)*0xA0+8);
+
+	return (1UL<<(((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].type&0x1F))&1;
+}
+
+/* 0x002276d0: whether two havok components each have the bit 11 of their
+flags (0x04) when their objects are of the kind 0 */
+long __attribute__((stdcall)) havok_unknown_002276d0(
+	long first,
+	long second)
+{
+	boolean first_kind0= havok_component_of_kind0(first);
+	boolean second_kind0= havok_component_of_kind0(second);
+	boolean first_bit= TRUE;
+	boolean second_bit= TRUE;
+
+	if (first_kind0)
+	{
+		first_bit= (*(const unsigned long *)((const byte *)havok_component_data->data+(first&0xFFFF)*0xA0+4)>>11)&1;
+	}
+	if (second_kind0)
+	{
+		second_bit= (*(const unsigned long *)((const byte *)havok_component_data->data+(second&0xFFFF)*0xA0+4)>>11)&1;
+	}
+
+	return first_bit && second_bit;
+}
+
+/* 0x001caed0: as 0x001cafc0, with the eight bytes from 0x60 cleared first
+(the game clears the three things of 0x20 bytes first too, which 0x001cafc0
+does again) */
+void havok_unknown_001caed0(
+	byte *data)
+{
+	memset(data+0x60, 0, 8);
+	havok_unknown_001cafc0(data);
+}
