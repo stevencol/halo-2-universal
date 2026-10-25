@@ -3555,3 +3555,58 @@ void weapon_unknown_0010f040(
 	}
 	state[0x00]&= ~2;
 }
+
+/* what is at the short at 0x342 of a unit takes a tag (and the long at
+0x14 of its data) */
+static inline __attribute__((always_inline)) void unit_unknown342_set_tag(
+	long unit_index,
+	long tag_index)
+{
+	long *data= (long *)((byte *)UNIT_OBJECT_GET(unit_index)+*(const short *)(UNIT_OBJECT_GET(unit_index)+0x342));
+
+	data[0]= tag_index;
+	data[1]= *(const long *)((const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address+0x14);
+}
+
+/* 0x00114ec0: what is at the short at 0x342 of a unit takes the tag and
+the value (0x90 and 0xA0) of the model of its definition (at 0x38), and
+then those of the first variant of the model (0x38 bytes each, at 0x54, as
+many as at 0x50) that has the name and a tag (0x34); without one, those of
+each variant with a tag while it has none. A value (0x2C) of 0 or NONE is
+not taken */
+void __attribute__((stdcall)) unit_unknown_00114ec0(
+	long unit_index,
+	long name)
+{
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	long *data= (long *)((byte *)unit+*(const short *)(unit+0x342));
+	const byte *model= (const byte *)(uintptr_t)global_tag_instances[
+		*(const long *)(UNIT_DEFINITION_GET(unit)+0x38)&0xFFFF].address;
+	short index;
+
+	data[0]= *(const long *)(model+0x90);
+	data[2]= *(const long *)(model+0xA0);
+	for (index= 0; index<*(const long *)(model+0x50); index++)
+	{
+		const byte *variant= *(const byte *const *)(model+0x54)+index*0x38;
+		long value= *(const long *)(variant+0x2C);
+
+		if (*(const long *)variant==name && *(const long *)(variant+0x34)!=NONE)
+		{
+			unit_unknown342_set_tag(unit_index, *(const long *)(variant+0x34));
+			if (value && value!=NONE)
+			{
+				data[2]= value;
+			}
+			return;
+		}
+		if (*(const long *)(variant+0x34)!=NONE && data[0]==NONE)
+		{
+			unit_unknown342_set_tag(unit_index, *(const long *)(variant+0x34));
+			if (value && value!=NONE)
+			{
+				data[2]= value;
+			}
+		}
+	}
+}

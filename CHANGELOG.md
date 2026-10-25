@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: la variante del modelo de una unidad por un nombre y el rectángulo de una celda de una cuadrícula
+
+Dos funciones medianas (664 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3047 funciones se pasa a 3049, el 27,07 % de
+las del juego (el 14,627 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_00114ec0` | `0x00114ec0` | `units/units.c` |
+| `rasterizer_unknown_0002f6b0` | `0x0002f6b0` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- lo que hay en el short 0x342 de una unidad toma el tag y el valor del modelo de su definición, y luego los de la primera variante con el nombre (o los de cada variante con tag mientras no tenga); y el rectángulo de una celda de una cuadrícula dentro del de recorte, con uno exterior que llega a los bordes y uno interior 4 hacia dentro. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: dónde está la cámara de una unidad y los gatillos de un arma que vuelven a empezar
 
 Dos funciones medianas (795 bytes) en 1 archivo, de las que el juego ejecuta

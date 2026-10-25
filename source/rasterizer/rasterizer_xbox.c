@@ -934,3 +934,58 @@ long rasterizer_unknown_00130de0(
 
 	return result;
 }
+
+/* 0x0002f6b0: the rectangle of a cell of a grid (a place and a span of
+cells) in the clip rectangle (the second of 0x00485a8a), as top, left,
+bottom and right shorts; the outer one reaches the first rectangle at the
+edges of the grid, the inner one is 4 in from the other edges */
+void __attribute__((stdcall)) rasterizer_unknown_0002f6b0(
+	const short *place,
+	const short *grid,
+	const short *span,
+	short *outer,
+	short *inner)
+{
+	short step_x= (short)((rasterizer_clip_unknown_00485a98-rasterizer_clip_unknown_00485a94)/grid[0]);
+	short step_y= (short)((rasterizer_clip_unknown_00485a96-rasterizer_clip_unknown_00485a92)/grid[1]);
+	short bounds[4];
+
+	bounds[1]= (short)((unsigned short)place[0]*step_x+rasterizer_clip_unknown_00485a94);
+	bounds[3]= (short)((unsigned short)(span[0]+place[0])*step_x+rasterizer_clip_unknown_00485a94);
+	bounds[0]= (short)((unsigned short)place[1]*step_y+rasterizer_clip_unknown_00485a92);
+	bounds[2]= (short)((unsigned short)(span[1]+place[1])*step_y+rasterizer_clip_unknown_00485a92);
+	memcpy(outer, bounds, sizeof(bounds));
+	memcpy(inner, bounds, sizeof(bounds));
+	if (place[0]==0)
+	{
+		outer[1]= rasterizer_clip_unknown_00485a8c;
+	}
+	else
+	{
+		inner[1]+= 4;
+	}
+	if (span[0]+place[0]>=grid[0])
+	{
+		outer[3]= rasterizer_clip_unknown_00485a90;
+	}
+	else
+	{
+		inner[3]-= 4;
+	}
+	if (place[1]==0)
+	{
+		outer[0]= rasterizer_clip_unknown_00485a8a;
+	}
+	else
+	{
+		inner[0]+= 4;
+	}
+	if (span[1]+place[1]>=grid[1])
+	{
+		outer[2]= rasterizer_clip_unknown_00485a8e;
+	}
+	else
+	{
+		inner[2]-= 4;
+	}
+}
