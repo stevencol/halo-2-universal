@@ -2013,3 +2013,24 @@ void network_unknown_00070190(
 	*(long *)(data+0xA90)= 0;
 	*(long *)(data+0xA94)= 0;
 }
+
+/* 0x000642a0: as network_session_leader_set_unknown49a1, for the session of
+the life cycle when unknown_00527330 is set and the session is in a state
+from 3 to 8 (its long at 0x741C); FALSE otherwise */
+boolean network_life_cycle_unknown_000642a0(
+	const byte *unknown49a1)
+{
+	long state;
+
+	if (!unknown_00527330)
+	{
+		return FALSE;
+	}
+	state= *(const long *)(network_life_cycle_session+0x741C);
+	if (!state || state<=2 || state>8)
+	{
+		return FALSE;
+	}
+
+	return network_session_leader_set_unknown49a1(network_life_cycle_session, unknown49a1);
+}

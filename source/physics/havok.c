@@ -1147,3 +1147,23 @@ long havok_unknown_002365e0(
 		return NONE;
 	}
 }
+
+/* 0x001c55b0: in a list (each points to the next at 0x0C), the long at
+0x04 of the one before the first whose thing (at 0x00) has 0xCABCABB0 at
+0x08; NONE if none has */
+long havok_unknown_001c55b0(
+	const byte *node)
+{
+	const byte *next;
+
+	for (next= *(const byte *const *)(node+0x0C); next; next= *(const byte *const *)(node+0x0C))
+	{
+		if (*(const unsigned long *)(*(const byte *const *)next+0x08)==0xCABCABB0)
+		{
+			break;
+		}
+		node= next;
+	}
+
+	return *(const byte *const *)(node+0x0C) ? *(const long *)(node+0x04) : NONE;
+}

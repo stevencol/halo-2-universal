@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Dos funciones pequeñas del camino al menú: un byte de la sesión en algunos de sus estados y un long de una lista antes de una marca
+
+Dos funciones pequeñas (89 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2853 funciones se pasa a 2855, el 25,34 % de
+las del juego (el 13,709 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `network_life_cycle_unknown_000642a0` | `0x000642a0` | `networking/network_life_cycle.c` |
+| `havok_unknown_001c55b0` | `0x001c55b0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- el byte de 0x49A1 de la sesión puesto en los estados 3 a 8; y el long de una lista antes del primero marcado con 0xCABCABB0.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: tres lugares de la entrada del idioma en una tabla y si cambió lo que da Havok
 
 Cuatro funciones pequeñas (161 bytes) en 2 archivos, de las que el juego ejecuta

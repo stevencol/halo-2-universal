@@ -3708,3 +3708,5 @@ address,name,source,arguments,returns,convention
 002afd40,unknown_002afd40,source/cache/cache_files.c,stack,pointer,stdcall
 002afd70,unknown_002afd70,source/cache/cache_files.c,stack,pointer,stdcall
 00278e80,unknown_00278e80,source/main/main.c,stack,void
+000642a0,network_life_cycle_unknown_000642a0,source/networking/network_life_cycle.c,esi,bool
+001c55b0,havok_unknown_001c55b0,source/physics/havok.c,edx,int
