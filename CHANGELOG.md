@@ -2,6 +2,27 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Una función del camino al menú: la matriz de un componente de havok desde su cuerpo principal o su objeto
+
+Una función pequeña (102 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3071 funciones se pasa a 3072, el 27,27 % de
+las del juego (el 14,855 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001d4360` | `0x001d4360` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- la matriz de un componente de havok (`havok_unknown_001d43d0`) desde la de su cuerpo principal o, si no tiene, desde la de su objeto. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirve; el nombre es la dirección.
+- Mutaciones: 3 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: los recursos de las animaciones de un estado pedidos y si uno de diez botones está pulsado
 
 Dos funciones pequeñas (214 bytes) en 2 archivos, de las que el juego ejecuta

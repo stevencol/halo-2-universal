@@ -2354,3 +2354,24 @@ void __attribute__((stdcall)) havok_unknown_001ce180(
 	havok_unknown_001ddd00((const byte *)(uintptr_t)global_tag_instances[*(const long *)(state+0x68)&0xFFFF].address,
 		names[0], names[1], names[2], urgent, other);
 }
+
+/* 0x001d4360: the matrix of a havok component (havok_unknown_001d43d0) from
+that of its main body (the byte at 0x18, of those at 0x74) or, without one,
+from that of its object (0x08) */
+void __attribute__((stdcall)) havok_unknown_001d4360(
+	const byte *component,
+	real_matrix4x3 *result)
+{
+	signed char main_body= (signed char)component[0x18];
+	real_matrix4x3 matrix;
+
+	if (main_body>=0 && main_body<*(const long *)(component+0x74))
+	{
+		havok_component_get_rigid_body_matrix((const struct havok_component *)component, main_body, &matrix);
+	}
+	else
+	{
+		object_get_world_matrix(*(const long *)(component+0x08), &matrix);
+	}
+	havok_unknown_001d43d0(component, &matrix, result);
+}
