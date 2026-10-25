@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: la semilla al azar movida por dieciséis cosas, el menor número sobre otro, unos números vaciados y un lugar de una de dieciséis cosas
+
+Cuatro funciones pequeñas (576 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2891 funciones se pasa a 2895, el 25,70 % de
+las del juego (el 13,816 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_00138db0` | `0x00138db0` | `game/game.c` |
+| `unknown_0019c440` | `0x0019c440` | `scenario/scenario.c` |
+| `unknown_0002cb30` | `0x0002cb30` | `game/game_unknown_0002b4a0.c` |
+| `unknown_00044940` | `0x00044940` | `game/game_unknown_0002b4a0.c` |
+
+### Lo que se sabe
+
+- la semilla al azar avanzada según el signo de dos reales de dieciséis cosas; el menor número por encima de otro en unas cosas de las globales del juego; unos números y 0x480 bytes vaciados; y un lugar de una de dieciséis cosas por su tag o en el bsp (siete variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: unas tablas vaciadas, si una unidad esperó bastante y cuánto queda de una cuenta de la voz
 
 Cuatro funciones pequeñas (475 bytes) en 3 archivos, de las que el juego ejecuta

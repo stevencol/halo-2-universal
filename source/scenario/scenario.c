@@ -531,3 +531,37 @@ void scenario_unknown_0014b360(
 	point[2]= ((const unsigned long *)(tag+0xA0))[2];
 	*found= TRUE;
 }
+
+/* 0x0019c440: of the things (0x108 bytes, as many as at 0x00 of the block
+at 0x174 of the game globals, when they have 0x170) with a number, the
+smallest of their longs at 0x04 above another; NONE if none is */
+long __attribute__((stdcall)) unknown_0019c440(
+	long campaign,
+	long map)
+{
+	const byte *globals= (const byte *)global_game_globals;
+	const byte *block= NULL;
+	long result= NONE;
+	long index;
+
+	if (global_scenario && globals && *(const long *)(globals+0x170))
+	{
+		block= *(const byte *const *)(globals+0x174);
+	}
+	if (!block)
+	{
+		return NONE;
+	}
+	for (index= 0; index<*(const long *)block; index++)
+	{
+		const byte *thing= *(const byte *const *)(block+0x04)+index*0x108;
+		long value= *(const long *)(thing+0x04);
+
+		if (*(const long *)thing==campaign && value>map && (result==NONE || value<result))
+		{
+			result= value;
+		}
+	}
+
+	return result;
+}

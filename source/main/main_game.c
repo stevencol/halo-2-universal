@@ -89,7 +89,7 @@ void unknown_000b3ed0(const void *data, long size, const char *content_type);
 /* 0x0019c440, 0x0019c270: of the maps of a campaign: which comes after
 one, NONE if it is the last, and what is known of one: its path is 8 bytes
 in */
-long unknown_0019c440(long campaign, long map);
+long __attribute__((stdcall)) unknown_0019c440(long campaign, long map);
 const char *unknown_0019c270(long campaign, long map);
 
 /* 0x00152450, 0x00152660: of the options of a game that is asked for: the

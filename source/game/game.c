@@ -1267,3 +1267,42 @@ void game_unknown_0011c7d0(
 		*unknownC= *(const long *)(unknown+0xC);
 	}
 }
+
+/* 0x00138db0: in a game of the kind 1 (0x08) that is active, the random
+seed goes on for each of sixteen things (0x5C bytes, from 0x10) of
+something that it has by the bits at 0x08: by 1 or 2 for the sign of the
+real at 0x14, and 4 or 8 for that at 0x10 */
+void unknown_00138db0(
+	struct game_tick_state *state)
+{
+	const byte *data= (const byte *)state;
+	const struct main_game_globals *game= main_game_globals;
+	unsigned long index;
+
+	if (!game || !game->active || *(const long *)((const byte *)game+0x08)!=1)
+	{
+		return;
+	}
+	for (index= 0; index<16; index++)
+	{
+		const real *values= (const real *)(data+0x10+index*0x5C);
+		long count;
+
+		if (!(*(const unsigned long *)(data+0x08)&(1UL<<index)))
+		{
+			continue;
+		}
+		count= values[1]>0.0f ? 1 : 0.0f>values[1] ? 2 : 0;
+		count|= values[0]>0.0f ? 4 : 8;
+		if (count>0)
+		{
+			unsigned long seed= *global_random_seed_reference;
+
+			while (count--)
+			{
+				seed= seed*0x19660D+0x3C6EF35F;
+			}
+			*global_random_seed_reference= seed;
+		}
+	}
+}

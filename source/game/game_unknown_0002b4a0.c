@@ -11,6 +11,8 @@ the file is only the address of its first function.
 #include "cseries/cseries.h"
 #include "memory/data.h"
 #include "saved games/game_state.h"
+#include "cache/cache_files.h"
+#include "scenario/scenario.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -229,4 +231,61 @@ void game_unknown_0002b4a0_set_kind(
 	unknown_004ba024= others;
 	unknown_004ba023= others;
 	unknown_004ba025= others;
+}
+
+/* 0x004c0b80: something with a long at 0x2A78. 0x004c0b78 and 0x004c0b7c:
+two numbers. 0x004c1528 to 0x004c19ac: a number, 0x480 bytes and a number */
+byte *unknown_004c0b80;
+long unknown_004c0b78;
+long unknown_004c0b7c;
+long unknown_004c1528;
+byte unknown_004c152c[0x480];
+long unknown_004c19ac;
+
+/* 0x0002cb30: when that long is zero, the numbers and the 0x480 bytes are
+zeros (the game copies nine zeros there and then them along it); otherwise
+the second number is the first */
+void unknown_0002cb30(
+	void)
+{
+	if (*(const long *)(unknown_004c0b80+0x2A78))
+	{
+		unknown_004c0b78= unknown_004c0b7c;
+		return;
+	}
+	unknown_004c0b7c= 0;
+	unknown_004c0b78= 0;
+	unknown_004c1528= 0;
+	memset(unknown_004c152c, 0, sizeof(unknown_004c152c));
+	unknown_004c19ac= 0;
+}
+
+/* 0x004ba138: sixteen of something of 0x20 bytes */
+byte unknown_004ba138[16*0x20];
+
+/* 0x00044940: a place of one of those: by its tag (0x04: in the block at
+0x28 of its definition, 0x5C bytes) or, without, in the structure bsp (in
+the block at 0xA0, 0xB0 bytes, or by a flag in that at 0x13C, 0xC8 bytes, by
+a short of that at 0x144), all by the bits of its long at 0x0C */
+byte *__attribute__((stdcall)) unknown_00044940(
+	short index,
+	boolean other)
+{
+	const byte *entry= unknown_004ba138+index*0x20;
+	unsigned long bits= *(const unsigned long *)(entry+0x0C);
+	long tag= *(const long *)(entry+0x04);
+	const byte *bsp= (const byte *)global_structure_bsp;
+
+	if (tag!=NONE)
+	{
+		const byte *definition= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+
+		return *(byte *const *)(definition+0x28)+((bits>>9)&0x1FF)*0x5C+4;
+	}
+	if (!other)
+	{
+		return *(byte *const *)(bsp+0xA0)+((bits>>9)&0x1FF)*0xB0;
+	}
+
+	return *(byte *const *)(bsp+0x13C)+*(const short *)(*(const byte *const *)(bsp+0x144)+((bits>>18)&0x7FF)*0x58+0x34)*0xC8;
 }

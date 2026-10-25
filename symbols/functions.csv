@@ -1054,7 +1054,7 @@ address,name,source,arguments,returns,convention
 0018e960,main_game_next_map,source/main/main_game.c,,void
 001c5ca0,unknown_001c5ca0,,edx stack,void
 000b3ed0,unknown_000b3ed0,,edx stack stack,void
-0019c440,unknown_0019c440,,stack stack,int
+0019c440,unknown_0019c440,source/scenario/scenario.c,stack stack,int,stdcall
 0019c270,unknown_0019c270,,stack stack,pointer
 00152450,unknown_00152450,,eax,void
 00152660,unknown_00152660,,stack,void
@@ -1419,7 +1419,7 @@ address,name,source,arguments,returns,convention
 000682e0,simulation_build_update,source/networking/simulation.c,eax,void
 000683a0,simulation_apply_update_changes,source/networking/simulation.c,stack,void,stdcall
 0014d3a0,unknown_0014d3a0,,stack,void,stdcall
-00138db0,unknown_00138db0,,ebx,void
+00138db0,unknown_00138db0,source/game/game.c,ebx,void
 000684e0,simulation_apply_update,source/networking/simulation.c,esi,void
 001c83c0,ai_update,source/ai/ai.c,,void
 001fb510,unknown_001fb510,,,void
@@ -3743,3 +3743,5 @@ address,name,source,arguments,returns,convention
 000e4050,unit_unknown_000e4050,source/units/units.c,eax,bool
 001591e0,game_voice_unknown_001591e0,source/networking/game_voice.c,edx,real:xmm0
 00161b60,game_voice_unknown_00161b60,source/networking/game_voice.c,ecx,bool
+0002cb30,unknown_0002cb30,source/game/game_unknown_0002b4a0.c,,void
+00044940,unknown_00044940,source/game/game_unknown_0002b4a0.c,eax stack,pointer,stdcall

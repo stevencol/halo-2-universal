@@ -788,3 +788,10 @@ address,name,source
 0050943c,unknown_0050943c,source/game/game_unknown_0003f2b0.c
 00509440,unknown_00509440,source/game/game_unknown_0003f2b0.c
 004e9af0,unknown_004e9af0,source/networking/game_voice.c
+004c0b80,unknown_004c0b80,source/game/game_unknown_0002b4a0.c
+004c0b78,unknown_004c0b78,source/game/game_unknown_0002b4a0.c
+004c0b7c,unknown_004c0b7c,source/game/game_unknown_0002b4a0.c
+004c1528,unknown_004c1528,source/game/game_unknown_0002b4a0.c
+004c152c,unknown_004c152c,source/game/game_unknown_0002b4a0.c
+004c19ac,unknown_004c19ac,source/game/game_unknown_0002b4a0.c
+004ba138,unknown_004ba138,source/game/game_unknown_0002b4a0.c
