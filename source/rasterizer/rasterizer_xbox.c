@@ -683,3 +683,41 @@ void rasterizer_unknown_0001beb0(
 		unknown_00485b28[6]= 1.0f/height*2.0f;
 	}
 }
+
+/* 0x00485a80, of rasterizer.c: where the globals of the rasterizer are */
+extern long unknown_00485a80;
+
+/* 0x00016f60: the textures of the stages of a shader (from a range: the
+first in the low 9 bits, how many above) go to the state of the rasterizer
+(0x40 bytes each, from 0x320, by the stage at 0x00 of each entry): the
+bitmap, its size and a value of the values at 0x08 of what it has at 0x0C
+(by the byte at 0x03), or the default bitmap (at 0x64 of unknown_00485a80)
+and zeros; and 3 at 0x10 */
+void __attribute__((stdcall)) rasterizer_unknown_00016f60(
+	byte *state,
+	const unsigned short *range)
+{
+	const byte *values= *(const byte *const *)(*(const byte *const *)(state+0x0C)+0x08);
+	const byte *entry= *(const byte *const *)(*(const byte *const *)(state+0x10)+0x24)+(*range&0x1FF)*4;
+	long index;
+
+	for (index= 0; index<(*range>>9); index++, entry+= 4)
+	{
+		byte *slot= state+0x320+entry[0]*0x40;
+		const long *source= (const long *)(values+entry[3]*12);
+
+		if (source[0]!=NONE)
+		{
+			*(long *)slot= source[0];
+			*(real *)(slot+0x18)= (real)source[1];
+			*(long *)(slot+0x14)= source[2];
+		}
+		else
+		{
+			*(long *)slot= *(const long *)((uintptr_t)unknown_00485a80+0x64);
+			*(real *)(slot+0x18)= 0.0f;
+			*(real *)(slot+0x14)= 0.0f;
+		}
+		*(real *)(slot+0x10)= 3.0f;
+	}
+}

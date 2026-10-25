@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: una animación y las que la siguen pedidas, y las texturas de las etapas de un shader
+
+Dos funciones medianas (378 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2990 funciones se pasa a 2992, el 26,56 % de
+las del juego (el 14,270 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001dd9d0` | `0x001dd9d0` | `physics/havok.c` |
+| `rasterizer_unknown_00016f60` | `0x00016f60` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- con la caché de animaciones abierta, el recurso de una animación y los de las que la siguen pedidos; y las texturas de las etapas de un shader puestas en el estado del rasterizador. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones del camino al menú: cuánto se agacha un bípedo, un adelante y un arriba perpendiculares y los colores de un jugador
 
 Tres funciones medianas (770 bytes) en 3 archivos, de las que el juego ejecuta

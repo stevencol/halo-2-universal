@@ -1827,3 +1827,43 @@ void __attribute__((stdcall)) havok_unknown_001ddd00(
 		havok_unknown_001ddc70(first_list, inherited, mode, weapon_class, weapon_type, second_list);
 	}
 }
+
+/* 0x00510c20 and 0x00510c21, of the animation cache */
+extern boolean animation_cache_initialized;
+extern boolean animation_cache_opened;
+
+/* 0x001dd9d0: with the animation cache open, an animation of a graph (its
+index in the high short of an id, and in the low one the graph it inherits
+it from, NONE for none) has its resource asked for, and so have those that
+follow it (each to the next at 0x32, from its parent at 0x30 if it has
+one) */
+void __attribute__((stdcall)) havok_unknown_001dd9d0(
+	const byte *graph,
+	unsigned long id)
+{
+	short index= (short)(id>>16);
+	short inherited= (short)id;
+	const byte *animation;
+
+	if (!animation_cache_initialized || !animation_cache_opened || index==NONE)
+	{
+		return;
+	}
+	if (inherited!=NONE)
+	{
+		graph= unknown4C_get_tag(inherited, graph);
+	}
+	animation= *(const byte *const *)(graph+0x30)+index*0x6C;
+	if (*(const short *)(animation+0x30)!=NONE)
+	{
+		animation= *(const byte *const *)(graph+0x30)+*(const short *)(animation+0x30)*0x6C;
+	}
+	havok_unknown_001dd840(index, graph);
+	while (*(const short *)(animation+0x32)!=NONE)
+	{
+		short next= *(const short *)(animation+0x32);
+
+		havok_unknown_001dd840(next, graph);
+		animation= *(const byte *const *)(graph+0x30)+next*0x6C;
+	}
+}
