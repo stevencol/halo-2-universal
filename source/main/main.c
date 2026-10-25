@@ -1105,3 +1105,20 @@ void unknown_00278e60(
 	unknown_0055e508= value;
 	unknown_0055e504= havok_unknown_00147090();
 }
+
+/* 0x0055e4fc: set when havok_unknown_00147090 has changed */
+boolean unknown_0055e4fc;
+
+/* 0x00278e80: the number is cleared; when havok_unknown_00147090 gives
+another than it gave, the byte at 0xAE of something and unknown_0055e4fc are
+set */
+void unknown_00278e80(
+	byte *data)
+{
+	unknown_0055e508= 0;
+	if (havok_unknown_00147090()!=unknown_0055e504)
+	{
+		data[0xAE]= TRUE;
+		unknown_0055e4fc= TRUE;
+	}
+}

@@ -3704,3 +3704,7 @@ address,name,source,arguments,returns,convention
 0013ac42,game_unknown_0013ac42,source/game/game_unknown_0013bf00.c,edx,void
 0013ac30,game_unknown_0013ac30,source/game/game_unknown_0013bf00.c,,void
 00278e60,unknown_00278e60,source/main/main.c,stack,void
+002afd10,unknown_002afd10,source/cache/cache_files.c,stack,pointer,stdcall
+002afd40,unknown_002afd40,source/cache/cache_files.c,stack,pointer,stdcall
+002afd70,unknown_002afd70,source/cache/cache_files.c,stack,pointer,stdcall
+00278e80,unknown_00278e80,source/main/main.c,stack,void

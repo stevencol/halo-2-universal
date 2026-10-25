@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Cuatro funciones pequeñas del camino al menú: tres lugares de la entrada del idioma en una tabla y si cambió lo que da Havok
+
+Cuatro funciones pequeñas (161 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2849 funciones se pasa a 2853, el 25,33 % de
+las del juego (el 13,706 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_002afd10` | `0x002afd10` | `cache/cache_files.c` |
+| `unknown_002afd40` | `0x002afd40` | `cache/cache_files.c` |
+| `unknown_002afd70` | `0x002afd70` | `cache/cache_files.c` |
+| `unknown_00278e80` | `0x00278e80` | `main/main.c` |
+
+### Lo que se sabe
+
+- tres lugares de la entrada del idioma de la consola en una tabla (el idioma se pide la primera vez); y si cambió lo que da `havok_unknown_00147090`.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 7 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Seis funciones pequeñas del camino al menú: un real sin signo, dónde está algo de Havok, dos números por una clase, cuatro cosas vaciadas y un número guardado
 
 Seis funciones pequeñas (143 bytes) en 4 archivos, de las que el juego ejecuta

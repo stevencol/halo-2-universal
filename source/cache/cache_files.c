@@ -1721,3 +1721,39 @@ long tag_iterator_next(
 
 	return NONE;
 }
+
+/* the language of the console, asked of it the first time */
+static inline __attribute__((always_inline)) long cache_files_language(
+	void)
+{
+	if (global_language==NONE)
+	{
+		global_language= language_from_xbox_language(XGetLanguage());
+	}
+
+	return global_language;
+}
+
+/* 0x002afd10: the place at 0x10 of the entry (0x40 bytes) of the language
+in a table */
+byte *__attribute__((stdcall)) unknown_002afd10(
+	byte *table)
+{
+	return table+(cache_files_language()<<6)+0x10;
+}
+
+/* 0x002afd40: the place at 0x250 of the entry (0x100 bytes) of the language
+in a table */
+byte *__attribute__((stdcall)) unknown_002afd40(
+	byte *table)
+{
+	return table+(cache_files_language()<<8)+0x250;
+}
+
+/* 0x002afd70: the place at 0x0C of the entry (0x40 bytes) of the language
+in a table */
+byte *__attribute__((stdcall)) unknown_002afd70(
+	byte *table)
+{
+	return table+(cache_files_language()<<6)+0x0C;
+}
