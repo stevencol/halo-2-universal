@@ -2791,3 +2791,21 @@ real unit_unknown_000d1490(
 
 	return value;
 }
+
+/* 0x00113910: the five counters (0x80 to 0x90, past the short at 0x33E) of
+a unit are updated; whether any says so */
+boolean unit_unknown_00113910(
+	long unit_index)
+{
+	byte *unit= (byte *)UNIT_OBJECT_GET(unit_index);
+	byte *counters= unit+*(const short *)(unit+0x33E);
+	boolean result;
+
+	result= unit_counter_update(counters+0x80);
+	result|= unit_counter_update(counters+0x84);
+	result|= unit_counter_update(counters+0x88);
+	result|= unit_counter_update(counters+0x8C);
+	result|= unit_counter_update(counters+0x90);
+
+	return result;
+}

@@ -1518,3 +1518,48 @@ void object_unknown_000ba540(
 	}
 	object[0xB1]= (byte)tag_unknown_0016d180(*(const long *)(definition+0x38), name);
 }
+
+void __attribute__((stdcall)) unknown_000b58c0(long index, unsigned long flags);
+
+/* 0x000cea00: unless the game is of the kind 4, the count of an object (its
+byte at 0x210, from 0 to 15) goes on and is at 0x210 and 0x214, and what it
+has at 0xD4 is told with 0x2000 */
+void object_unknown_000cea00(
+	long object_index)
+{
+	byte *object;
+	unsigned short count;
+
+	if (((const byte *)main_game_globals)[0x0C]==4)
+	{
+		return;
+	}
+	object= OBJECT_DATA(object_index);
+	count= (byte)(object[0x210]+1)&0x0F;
+	*(unsigned short *)(object+0x210)= count;
+	*(unsigned short *)(object+0x214)= count;
+	if (*(const long *)(OBJECT_DATA(object_index)+0xD4)!=NONE)
+	{
+		unknown_000b58c0(*(const long *)(OBJECT_DATA(object_index)+0xD4), 0x2000);
+	}
+}
+
+/* 0x000bc7b0: an object of the kinds 0, 1 or 12 wakes, and so do those
+under it (from its 0x10, each to the next at 0x0C), and theirs */
+void __attribute__((stdcall)) object_unknown_000bc7b0(
+	long object_index)
+{
+	const struct object_header_datum *header= &((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF];
+	long child_index;
+
+	if ((1UL<<(header->type&0x1F))&0x1003)
+	{
+		object_wake(object_index);
+	}
+	child_index= *(const long *)((const byte *)header->datum+0x10);
+	while (child_index!=NONE)
+	{
+		object_unknown_000bc7b0(child_index);
+		child_index= *(const long *)(OBJECT_DATA(child_index)+0x0C);
+	}
+}

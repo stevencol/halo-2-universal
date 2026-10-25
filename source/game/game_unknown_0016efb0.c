@@ -212,3 +212,32 @@ real_point3d *game_unknown_0016efb0_get_point(
 
 	return (real_point3d *)(unknown_004e9bd4[local_player_index]+0xB8);
 }
+
+boolean valid_world_real_point3d(const real *point);
+boolean valid_real_point3d(const real *point);
+long real_math_unknown_000a74c0(const real *forward, const real *up);
+
+/* 0x001724a0: whether a camera (with the bit 0 of its flags) is good: its
+two vectors (0x2C and 0x38) one long and perpendicular, two points in the
+world (0x04 and 0x10), a point (0x44) and three reals in their ranges (0x24,
+0x28 and 0x88); TRUE without the bit, FALSE for none */
+boolean game_unknown_001724a0(
+	const byte *camera)
+{
+	if (!camera)
+	{
+		return FALSE;
+	}
+	if (!(camera[0]&1))
+	{
+		return TRUE;
+	}
+
+	return real_math_unknown_000a74c0((const real *)(camera+0x2C), (const real *)(camera+0x38))
+		&& valid_world_real_point3d((const real *)(camera+0x04))
+		&& valid_world_real_point3d((const real *)(camera+0x10))
+		&& valid_real_point3d((const real *)(camera+0x44))
+		&& real_is_in_range_0054e860(*(const float *)(camera+0x24))
+		&& real_is_in_range_0054e858(*(const float *)(camera+0x28))
+		&& real_is_in_range_3600(*(const float *)(camera+0x88));
+}

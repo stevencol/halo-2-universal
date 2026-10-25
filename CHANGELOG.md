@@ -2,6 +2,31 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cinco funciones del camino al menú: los contadores de una unidad, la cuenta de un objeto, un objeto y los de debajo despiertos, una entrada de sonido y si una cámara es buena
+
+Cinco funciones medianas (540 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2920 funciones se pasa a 2925, el 25,97 % de
+las del juego (el 13,940 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_00113910` | `0x00113910` | `units/units.c` |
+| `object_unknown_000cea00` | `0x000cea00` | `objects/objects.c` |
+| `object_unknown_000bc7b0` | `0x000bc7b0` | `objects/objects.c` |
+| `sound_unknown_00188f90` | `0x00188f90` | `sound/sound_manager.c` |
+| `game_unknown_001724a0` | `0x001724a0` | `game/game_unknown_0016efb0.c` |
+
+### Lo que se sabe
+
+- los cinco contadores de una unidad; la cuenta (0 a 15) de un objeto; un objeto de ciertas clases y los de debajo despiertos; una entrada más de `unknown_004ed28c`; y si una cámara tiene sus vectores, puntos y reales en rango.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 20 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones pequeñas del camino al menú: algo de Havok que empieza y siete reales de la altura de la pantalla del texto
 
 Dos funciones pequeñas (310 bytes) en 2 archivos, de las que el juego ejecuta

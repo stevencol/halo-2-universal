@@ -3770,3 +3770,8 @@ address,name,source,arguments,returns,convention
 00185b30,sound_unknown_00185b30,source/sound/sound_manager.c,eax esi stack,real:xmm0,stdcall
 001cf950,havok_unknown_001cf950,source/physics/havok.c,eax edx,void
 0001beb0,rasterizer_unknown_0001beb0,source/rasterizer/rasterizer_xbox.c,,void
+00113910,unit_unknown_00113910,source/units/units.c,eax,bool
+000cea00,object_unknown_000cea00,source/objects/objects.c,eax,void
+000bc7b0,object_unknown_000bc7b0,source/objects/objects.c,stack,void,stdcall
+00188f90,sound_unknown_00188f90,source/sound/sound_manager.c,esi edi stack stack,int,stdcall
+001724a0,game_unknown_001724a0,source/game/game_unknown_0016efb0.c,ebx,bool

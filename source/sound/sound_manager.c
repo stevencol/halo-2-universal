@@ -14118,3 +14118,48 @@ real __attribute__((stdcall)) sound_unknown_00185b30(
 
 	return negative ? 0.0f-result : result;
 }
+
+/* 0x00188f90: one more of unknown_004ed28c (0x18 bytes) for something: the
+kind 3, with another thing (0x10, its number at 0x14 and a short at 0x06) or
+none; NONE when there is no room or no thing */
+long __attribute__((stdcall)) sound_unknown_00188f90(
+	long thing,
+	long other,
+	short value,
+	long number)
+{
+	long index;
+	byte *entry;
+
+	if (thing==NONE)
+	{
+		return NONE;
+	}
+	index= datum_new(unknown_004ed28c);
+	if (index==NONE)
+	{
+		return NONE;
+	}
+	entry= (byte *)unknown_004ed28c->data+(index&0xFFFF)*0x18;
+	*(long *)(entry+0x0C)= thing;
+	entry[2]= 3;
+	*(short *)(entry+0x04)= 0;
+	entry[5]|= 1;
+	if (other!=NONE)
+	{
+		entry[3]= 1;
+		*(long *)(entry+0x14)= number;
+		*(long *)(entry+0x10)= other;
+		*(short *)(entry+0x06)= value;
+	}
+	else
+	{
+		*(short *)(entry+0x06)= NONE;
+		entry[3]= 0;
+		*(long *)(entry+0x10)= 0;
+		entry[0x14]= 0xFF;
+		*(short *)(entry+0x16)= NONE;
+	}
+
+	return index;
+}
