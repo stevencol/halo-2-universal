@@ -3394,3 +3394,72 @@ void __attribute__((stdcall)) unit_unknown_000c86e0(
 		sound_unknown_001896c0(sound_index, 1.0f);
 	}
 }
+
+/* a recent amount of damage goes down after a delay (in seconds, as
+ticks rounded as the x87 rounds) by one in a time of decay, to zero */
+static inline __attribute__((always_inline)) void unit_recent_damage_decay(
+	real *recent,
+	signed char timer,
+	real delay,
+	real decay)
+{
+	if (!(*recent>0.0f) || timer<lrintf((real)game_time_globals->ticks_per_second*delay))
+	{
+		return;
+	}
+	if (decay>0.0001f)
+	{
+		*recent-= 1.0f/((real)game_time_globals->ticks_per_second*decay);
+		if (0.0f>*recent)
+		{
+			*recent= 0.0f;
+		}
+	}
+	else
+	{
+		*recent= 0.0f;
+	}
+}
+
+/* 0x000d8b50: a tick of two recent amounts of damage and the timer of
+them (NONE for none, up to 0x7F): each goes down after its delay by its
+decay (0x30 to 0x3C of a definition, or 0, 2, 2 and 2); the first is zero
+when reset, and the timer is NONE when both are zero. Whether there was a
+timer */
+boolean __attribute__((stdcall)) unit_unknown_000d8b50(
+	signed char *timer,
+	const byte *definition,
+	real *first,
+	real *second,
+	boolean reset)
+{
+	real first_delay= 0.0f;
+	real first_decay= 2.0f;
+	real second_delay= 2.0f;
+	real second_decay= 2.0f;
+
+	if (*timer==NONE)
+	{
+		return FALSE;
+	}
+	if (definition)
+	{
+		first_delay= *(const real *)(definition+0x30);
+		first_decay= *(const real *)(definition+0x34);
+		second_delay= *(const real *)(definition+0x38);
+		second_decay= *(const real *)(definition+0x3C);
+	}
+	*timer= *timer+1>0x7F ? 0x7F : *timer+1;
+	unit_recent_damage_decay(first, *timer, first_delay, first_decay);
+	unit_recent_damage_decay(second, *timer, second_delay, second_decay);
+	if (reset)
+	{
+		*first= 0.0f;
+	}
+	if ((reset || *first==0.0f) && *second==0.0f)
+	{
+		*timer= NONE;
+	}
+
+	return TRUE;
+}

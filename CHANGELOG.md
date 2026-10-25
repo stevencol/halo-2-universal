@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: un tick de dos cantidades recientes de daño y lo que se hace con la niebla que llega
+
+Dos funciones medianas (710 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3043 funciones se pasa a 3045, el 27,03 % de
+las del juego (el 14,578 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000d8b50` | `0x000d8b50` | `units/units.c` |
+| `rasterizer_unknown_00130de0` | `0x00130de0` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- un tick de dos cantidades recientes de daño y su temporizador: cada una baja tras su retardo (en ticks redondeados como el x87) según su caída, hasta cero, y el temporizador es NONE cuando las dos son cero; y lo que se hace con la niebla que llega: si no hay, qué capas tienen (0 a 2); si es entera, ocupa la primera o la segunda capa (4 o 5) y deja de llegar; 3 si no se hace nada. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: los objetos de los datos del escenario por sus sitios y una unidad que deja de hacer zoom
 
 Dos funciones medianas (697 bytes) en 2 archivos, de las que el juego ejecuta

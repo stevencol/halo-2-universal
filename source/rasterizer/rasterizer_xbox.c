@@ -863,3 +863,74 @@ void rasterizer_unknown_0001c1b0(
 		}
 	}
 }
+
+/* 0x00130de0: what is done with the fog that is coming (its color at 0xA0,
+its intensity at 0xAC and two distances at 0xB0 and 0xB4): with none, 1
+when one of the first two layers (0x18 bytes each, from 0x1C: a color, an
+intensity and two distances) has some, 2 when the third has, 0 otherwise;
+when it is whole and the real at 0x10C is 1 and that at 0x118 is 0, it takes
+the place of the first layer (4) or the second (5) that has none or is as
+far as it, and is no more; 3 when it is not done */
+long rasterizer_unknown_00130de0(
+	byte *fog)
+{
+	long *layer;
+	real distance;
+	long result;
+
+	if (!(*(const real *)(fog+0xAC)>0.0f))
+	{
+		if (*(const real *)(fog+0x28)>0.0f || *(const real *)(fog+0x40)>0.0f)
+		{
+			return 1;
+		}
+		return *(const real *)(fog+0x58)>0.0f ? 2 : 0;
+	}
+	if (*(const real *)(fog+0x10C)!=1.0f || *(const real *)(fog+0x118)!=0.0f)
+	{
+		return 3;
+	}
+	if (*(const real *)(fog+0x28)==0.0f)
+	{
+		layer= (long *)(fog+0x1C);
+		result= 4;
+	}
+	else if (*(const real *)(fog+0x40)==0.0f)
+	{
+		layer= (long *)(fog+0x34);
+		result= 5;
+	}
+	else
+	{
+		if (*(const real *)(fog+0xAC)!=1.0f)
+		{
+			return 3;
+		}
+		distance= *(const real *)(fog+0xB0)>*(const real *)(fog+0xB4) ? *(const real *)(fog+0xB0) : *(const real *)(fog+0xB4);
+		if (*(const real *)(fog+0x2C)>=distance)
+		{
+			layer= (long *)(fog+0x1C);
+			result= 4;
+		}
+		else if (*(const real *)(fog+0x44)>=distance)
+		{
+			layer= (long *)(fog+0x34);
+			result= 5;
+		}
+		else
+		{
+			return 3;
+		}
+	}
+	layer[0]= *(const long *)(fog+0xA0);
+	layer[1]= *(const long *)(fog+0xA4);
+	layer[2]= *(const long *)(fog+0xA8);
+	layer[3]= *(const long *)(fog+0xAC);
+	layer[4]= *(const long *)(fog+0x110);
+	layer[5]= *(const long *)(fog+0xB0);
+	*(real *)(fog+0xAC)= 0.0f;
+	*(real *)(fog+0x10C)= 0.0f;
+	*(real *)(fog+0x118)= 1.0f;
+
+	return result;
+}
