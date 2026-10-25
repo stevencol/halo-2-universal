@@ -3610,3 +3610,105 @@ void __attribute__((stdcall)) unit_unknown_00114ec0(
 		}
 	}
 }
+
+/* 0x000c85c0: whether a unit can do something: not with a parent, with
+the bit 26 or 27 at 0x04 of what is at the short at 0x346, with one of
+seven bits of unit_unknown_000e6fe0, or with a weapon in a hand (the bytes
+at 0x212) that has an entry from 1 to 6 (weapon_unknown_00100880) */
+boolean unit_unknown_000c85c0(
+	long unit_index)
+{
+	static const long bits[]= { 0x16, 8, 0x12, 0, 1, 0x0A, 0x0B };
+	const byte *unit= UNIT_OBJECT_GET(unit_index);
+	unsigned long flags;
+	long index;
+
+	if (*(const long *)(unit+0x14)!=NONE)
+	{
+		return FALSE;
+	}
+	flags= *(const unsigned long *)(UNIT_UNKNOWN346(unit)+0x04);
+	if (((flags>>26)&1) || ((flags>>27)&1))
+	{
+		return FALSE;
+	}
+	for (index= 0; index<(long)(sizeof(bits)/sizeof(bits[0])); index++)
+	{
+		if (unit_unknown_000e6fe0(unit_index, bits[index]))
+		{
+			return FALSE;
+		}
+	}
+	unit= UNIT_OBJECT_GET(unit_index);
+	for (index= 0; index<2; index++)
+	{
+		signed char weapon= (signed char)unit[0x212+index];
+
+		if (weapon!=NONE && *(const long *)(unit+0x218+weapon*4)!=NONE
+			&& weapon_unknown_00100880(*(const long *)(unit+0x218+weapon*4), NONE))
+		{
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+/* the rounds of a magazine (0x10 bytes each, from 0x220) of a weapon:
+those of its definition (the short at 0x0C of each of 0x5C bytes at 0x2C4,
+as many as at 0x2C0) when it has infinite ones, or those unloaded (the short
+at 0x0A) */
+static inline __attribute__((always_inline)) long weapon_magazine_rounds(
+	const byte *weapon,
+	long magazine_index,
+	boolean infinite)
+{
+	if (infinite)
+	{
+		const byte *definition= UNIT_DEFINITION_GET(weapon);
+
+		if (*(const long *)(definition+0x2C0)<=magazine_index)
+		{
+			return 0;
+		}
+		return *(const short *)(*(const byte *const *)(definition+0x2C4)+magazine_index*0x5C+0x0C);
+	}
+
+	return *(const short *)(weapon+magazine_index*0x10+0x22A);
+}
+
+/* 0x001008f0: the rounds of a magazine of a weapon and, unless only the
+weapon's are wanted, of the other weapons of its unit (0x154) of the same
+definition */
+long __attribute__((stdcall)) weapon_unknown_001008f0(
+	long magazine_index,
+	long weapon_index,
+	boolean weapon_only)
+{
+	const byte *weapon= UNIT_OBJECT_GET(weapon_index);
+	boolean infinite= weapon_unknown_00106030(weapon_index);
+	long rounds= weapon_magazine_rounds(weapon, magazine_index, infinite);
+	long index;
+
+	if (*(const long *)(weapon+0x154)==NONE || weapon_only)
+	{
+		return rounds;
+	}
+	for (index= 0; index<4; index++)
+	{
+		long other_index= *(const long *)(UNIT_OBJECT_GET(*(const long *)(weapon+0x154))+0x218+index*4);
+		const byte *other;
+
+		if (other_index==NONE || other_index==weapon_index)
+		{
+			continue;
+		}
+		other= UNIT_OBJECT_GET(other_index);
+		if (*(const long *)other==*(const long *)weapon)
+		{
+			rounds+= weapon_magazine_rounds(other, magazine_index, infinite);
+		}
+	}
+
+	return rounds;
+}

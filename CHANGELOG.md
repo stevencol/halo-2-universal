@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: si una unidad puede hacer algo y las balas de un cargador de un arma y de las demás de su unidad
+
+Dos funciones medianas (870 bytes) en 1 archivo, de las que el juego ejecuta
+hasta el menú principal. De 3054 funciones se pasa a 3056, el 27,13 % de
+las del juego (el 14,718 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unit_unknown_000c85c0` | `0x000c85c0` | `units/units.c` |
+| `weapon_unknown_001008f0` | `0x001008f0` | `units/units.c` |
+
+### Lo que se sabe
+
+- si una unidad puede hacer algo: sin padre, sin los bits 26 y 27, sin ninguno de siete bits de `unit_unknown_000e6fe0` y sin un arma en la mano con una entrada de 1 a 6; y las balas de un cargador de un arma (las de su definición si son infinitas, o las descargadas) y, si no se piden solo las suyas, las de las otras armas de su unidad con la misma definición. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones del camino al menú: la rotación entre dos matrices de un adelante y un arriba, la diferencia de dos estados y una consulta preparada
 
 Tres funciones medianas (912 bytes) en 2 archivos, de las que el juego ejecuta
