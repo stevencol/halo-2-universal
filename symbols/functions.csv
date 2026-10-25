@@ -3900,3 +3900,6 @@ address,name,source,arguments,returns,convention
 0002f6b0,rasterizer_unknown_0002f6b0,source/rasterizer/rasterizer_xbox.c,esi stack stack stack ebx,void,stdcall
 001c69b0,havok_unknown_001c69b0,source/physics/havok.c,esi,void
 0004c2b0,unknown_0004c2b0,source/game/game_unknown_0003f2b0.c,eax stack stack stack stack stack stack,bool,stdcall
+00170c00,real_math_unknown_00170c00,source/math/real_math.c,ecx stack eax edx stack,pointer,stdcall
+00170bb0,real_math_unknown_00170bb0,source/math/real_math.c,eax ecx edx,void
+00132b80,unknown_00132b80,source/game/game_unknown_00131ff0.c,ecx ebx stack stack stack stack stack stack stack stack stack,int,stdcall

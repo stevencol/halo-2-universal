@@ -2,6 +2,29 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Tres funciones del camino al menú: la rotación entre dos matrices de un adelante y un arriba, la diferencia de dos estados y una consulta preparada
+
+Tres funciones medianas (912 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3051 funciones se pasa a 3054, el 27,11 % de
+las del juego (el 14,688 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `real_math_unknown_00170c00` | `0x00170c00` | `math/real_math.c` |
+| `real_math_unknown_00170bb0` | `0x00170bb0` | `math/real_math.c` |
+| `unknown_00132b80` | `0x00132b80` | `game/game_unknown_00131ff0.c` |
+
+### Lo que se sabe
+
+- la rotación entre la matriz de un adelante y un arriba y la de otros (`matrix4x3_rotation_between`); la diferencia de dos estados de 16 reales (diez restados y la rotación entre sus ejes); y una consulta preparada: su sitio, modo, banderas, frustums, centro y radio, un plano y un filtro, y qué clase de consulta es (0, 1 o 2). Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 4 de `make_mutations.py` y 12 a mano (no encontró nada que romper en dos de las funciones), 0 sin cazar; 1 que no cambia nada (la escala de las matrices), quitada.
+
 ## 2026-10-25 — Dos funciones del camino al menú: los eventos de la animación de un canal y las secciones de los grupos de un tag para las variantes pedidas
 
 Dos funciones medianas (913 bytes) en 2 archivos, de las que el juego ejecuta

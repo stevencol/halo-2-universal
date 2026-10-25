@@ -9,6 +9,7 @@ the file is only the address of its first function.
 
 #include "cseries/cseries.h"
 #include "cache/cache_files.h"
+#include "scenario/scenario.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -211,4 +212,77 @@ unsigned long __attribute__((stdcall)) game_unknown_00131ff0_flags_from(
 	}
 
 	return result;
+}
+
+/* 0x00132b80: a query of what it keeps (of 0x2AD4 bytes) made ready: its
+location (a cluster, or where a center is), a mode, flags, frusta (0x1BC
+bytes each, copied after the count at what 0x00 points to), a center and a
+radius, a plane (at 0x74 of the first frustum, moved by an offset) when it
+is used (the flag 0x200), and a filter (the flag 1, with thirteen counters
+at zero); what kind of query it is: 2 for mode 0 with the flag 0x80, 0 for
+frusta with a radius of 3 or more or the flag 0x100, 1 otherwise */
+long __attribute__((stdcall)) unknown_00132b80(
+	unsigned long flags,
+	long count,
+	byte *data,
+	long mode,
+	const byte *frusta,
+	long cluster_index,
+	void *filter,
+	const real_point3d *center,
+	real radius,
+	boolean use_plane,
+	real plane_offset)
+{
+	byte *destination;
+
+	*(short *)(data+0x08)= (short)cluster_index;
+	*(short *)(data+0x0A)= global_structure_bsp_index;
+	*(long *)(data+0x04)= NONE;
+	*(long *)(data+0x2A78)= mode;
+	*(unsigned long *)(data+0x2A60)= flags;
+	*(short *)(data+0x2A64)= (short)count;
+	*(real_point3d *)(data+0x2A68)= *center;
+	*(real *)(data+0x2A74)= radius;
+	*(real *)(data+0x2A84)= plane_offset;
+	if (use_plane)
+	{
+		*(unsigned long *)(data+0x2A60)= flags|0x200;
+		memcpy(data+0x2A88, frusta+0x74, 16);
+		*(real *)(data+0x2A94)+= plane_offset;
+	}
+	else
+	{
+		*(unsigned long *)(data+0x2A60)= flags&~0x200UL;
+	}
+	destination= *(byte **)data+4;
+	if (frusta!=destination)
+	{
+		memcpy(destination, frusta, count*0x1BC);
+	}
+	**(short **)data= (short)count;
+	if (cluster_index==NONE)
+	{
+		scenario_location_from_point((struct scenario_location *)(data+0x04), center);
+	}
+	*(void **)(data+0x2AD0)= filter;
+	if (filter)
+	{
+		*(unsigned long *)(data+0x2A60)|= 1;
+		memset(data+0x2A98, 0, 13*sizeof(long));
+	}
+	if (*(const long *)(data+0x2A78)==0 && (data[0x2A60]&0x80))
+	{
+		*(long *)(data+0x2A7C)= 2;
+	}
+	else if (count && (!(3.0f>radius) || (*(const unsigned long *)(data+0x2A60)&0x100)))
+	{
+		*(long *)(data+0x2A7C)= 0;
+	}
+	else
+	{
+		*(long *)(data+0x2A7C)= 1;
+	}
+
+	return *(const long *)(data+0x2A7C);
 }

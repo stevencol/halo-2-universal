@@ -1608,3 +1608,57 @@ real *real_math_unknown_00131c20(
 
 	return result;
 }
+
+/* a matrix of a forward and an up: a scale of one, the left between them
+(up times forward) and no position */
+static inline __attribute__((always_inline)) void matrix4x3_from_forward_and_up(
+	real_matrix4x3 *matrix,
+	const real_vector3d *forward,
+	const real_vector3d *up)
+{
+	matrix->scale= 1.0f;
+	matrix->forward= *forward;
+	matrix->left.i= up->j*forward->k - forward->j*up->k;
+	matrix->left.j= forward->i*up->k - up->i*forward->k;
+	matrix->left.k= forward->j*up->i - forward->i*up->j;
+	matrix->up= *up;
+	matrix->position.x= 0.0f;
+	matrix->position.y= 0.0f;
+	matrix->position.z= 0.0f;
+}
+
+/* 0x00170c00: the rotation between the matrix of a forward and an up and
+that of another (matrix4x3_rotation_between) */
+real_vector3d *__attribute__((stdcall)) real_math_unknown_00170c00(
+	const real_vector3d *up,
+	const real_vector3d *forward,
+	const real_vector3d *other_up,
+	const real_vector3d *other_forward,
+	real_vector3d *rotation)
+{
+	real_matrix4x3 from;
+	real_matrix4x3 to;
+
+	matrix4x3_from_forward_and_up(&from, forward, up);
+	matrix4x3_from_forward_and_up(&to, other_forward, other_up);
+
+	return matrix4x3_rotation_between(rotation, &from, &to);
+}
+
+/* 0x00170bb0: the difference of two states of 16 reals: the first ten one
+less the other, then the rotation from the forward and up of the second to
+those of the first */
+void real_math_unknown_00170bb0(
+	const real *first,
+	const real *second,
+	real *difference)
+{
+	long index;
+
+	for (index= 0; index<10; index++)
+	{
+		difference[index]= first[index]-second[index];
+	}
+	real_math_unknown_00170c00((const real_vector3d *)(second+13), (const real_vector3d *)(second+10),
+		(const real_vector3d *)(first+13), (const real_vector3d *)(first+10), (real_vector3d *)(difference+10));
+}
