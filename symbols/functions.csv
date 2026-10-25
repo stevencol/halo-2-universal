@@ -3793,3 +3793,5 @@ address,name,source,arguments,returns,convention
 000646b0,game_voice_unknown_000646b0,source/networking/game_voice.c,eax ecx,int
 0003dd10,cached_object_render_state_unknown_0003dd10,source/game/game_unknown_0002b4a0.c,stack stack,void,stdcall
 0018d1c0,sound_unknown_0018d1c0,source/sound/sound_manager.c,stack,int,stdcall
+00134240,game_engine_unknown_00134240,source/game/game_engine.c,stack,void,stdcall
+00146fd0,havok_unknown_00146fd0,source/physics/havok.c,,int

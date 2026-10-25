@@ -1483,3 +1483,51 @@ void __attribute__((stdcall)) havok_unknown_001cc2f0(
 		names[3]= 0x0400000C;
 	}
 }
+
+/* 0x00479898: a third thing that gives memory */
+byte *unknown_00479898;
+
+/* 0x00146fd0: how busy Havok is, from 0 to 3: 3 when either of the two
+things has a count at 0x20; for the third, by how full it is (its long at
+0xF0340, by 1/118) and havok_unknown_0022cb90 below 0.65, 0.75 or 0.85 */
+long havok_unknown_00146fd0(
+	void)
+{
+	long first= 0;
+	long second= 0;
+	long third= 0;
+	long result;
+
+	if (unknown_004798a0 && *(const long *)((const byte *)unknown_004798a0+0x20)>0)
+	{
+		first= 3;
+	}
+	if (unknown_0047989c && *(const long *)((const byte *)unknown_0047989c+0x20)>0)
+	{
+		second= 3;
+	}
+	if (unknown_00479898)
+	{
+		third= 3;
+		if (0.8f>(real)*(const long *)(unknown_00479898+0xF0340)*0.0084745763f)
+		{
+			real value= havok_unknown_0022cb90(unknown_00479898);
+
+			if (0.85f>value)
+			{
+				third= 2;
+				if (0.75f>value)
+				{
+					third= 1;
+					if (0.65f>value)
+					{
+						third= 0;
+					}
+				}
+			}
+		}
+	}
+	result= third>first ? third : first;
+
+	return second>result ? second : result;
+}

@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: los objetos de una lista con una cuenta en su tag primero y cuán ocupado está Havok
+
+Dos funciones medianas (365 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2943 funciones se pasa a 2945, el 26,14 % de
+las del juego (el 14,062 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `game_engine_unknown_00134240` | `0x00134240` | `game/game_engine.c` |
+| `havok_unknown_00146fd0` | `0x00146fd0` | `physics/havok.c` |
+
+### Lo que se sabe
+
+- los objetos de una lista cuyo tag tiene una cuenta van primero; y cuán ocupado está Havok, de 0 a 3 (`unknown_00479898`, nueva).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 7 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Tres funciones del camino al menú: cómo está uno de los cuatro en una sesión, los colores de un objeto en su caché y la primera entrada de un sonido de algo
 
 Tres funciones medianas (623 bytes) en 3 archivos, de las que el juego ejecuta

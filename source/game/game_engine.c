@@ -1071,3 +1071,52 @@ void __attribute__((stdcall)) game_engine_unknown_00165bc0(
 	(*(struct game_engine_list **)(lists+0x0C))->count= 0;
 	(*(struct game_engine_list **)(lists+0x18))->count= 0;
 }
+
+/* 0x00134240: the objects of the list at 0x14 of something whose tag (the
+tag of the tag at 0x38 of their definition) has a count at 0x74 go first,
+in their order */
+void __attribute__((stdcall)) game_engine_unknown_00134240(
+	const byte *owner)
+{
+	short index;
+	short kept= 0;
+
+	for (index= 0; index<(short)(*(struct game_engine_list *const *)(owner+0x14))->count; index++)
+	{
+		struct game_engine_list *list= *(struct game_engine_list *const *)(owner+0x14);
+		long object_index= (long)list->longsC[index];
+		const byte *object;
+		const byte *definition;
+		long tag;
+
+		if (object_index==NONE)
+		{
+			continue;
+		}
+		object= (const byte *)((const struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum;
+		if (!object || *(const long *)object==NONE)
+		{
+			continue;
+		}
+		definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address;
+		if (!definition || (tag= *(const long *)(definition+0x38))==NONE)
+		{
+			continue;
+		}
+		definition= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+		if (!definition || (tag= *(const long *)(definition+0x04))==NONE)
+		{
+			continue;
+		}
+		definition= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+		if (*(const long *)(definition+0x74)<=0)
+		{
+			continue;
+		}
+		if (index!=kept)
+		{
+			game_engine_list_swap(index, kept, list);
+		}
+		kept++;
+	}
+}
