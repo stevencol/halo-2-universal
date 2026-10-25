@@ -189,3 +189,26 @@ long __attribute__((stdcall)) tag_unknown_00137590(
 
 	return result==NONE ? value : result;
 }
+
+/* 0x00137610: the bitmap (0x74 bytes, of those at 0x48 of a bitmap group,
+as many as at 0x44) that tag_unknown_00137590 picks; NULL if none */
+void *game_unknown_00137610(
+	long tag_index,
+	short which,
+	short value)
+{
+	long index= tag_unknown_00137590(tag_index, which, value);
+	const byte *group;
+
+	if (index==NONE)
+	{
+		return NULL;
+	}
+	group= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	if (index<0 || index>=*(const long *)(group+0x44))
+	{
+		return NULL;
+	}
+
+	return *(byte *const *)(group+0x48)+index*0x74;
+}

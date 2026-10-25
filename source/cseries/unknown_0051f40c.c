@@ -120,3 +120,27 @@ void unknown_0051f40c_update(
 	unknown_0051f408= FALSE;
 	unknown_005234c4= NONE;
 }
+
+/* 0x0002e1e0: the entries (with the bit 4) of an object (its index in the
+bits 6 to 17) are cleared */
+void unknown_0051f40c_clear_object(
+	long object_index)
+{
+	long absolute_index;
+	long index;
+
+	if (object_index==NONE)
+	{
+		return;
+	}
+	absolute_index= object_index&0xFFFF;
+	for (index= 0; index<unknown_005233ec; index++)
+	{
+		unsigned long flags= unknown_0051f40c[8*index];
+
+		if ((flags&0x10) && ((flags>>6)&0xFFF)==(unsigned long)absolute_index)
+		{
+			unknown_0051f40c_clear(index);
+		}
+	}
+}

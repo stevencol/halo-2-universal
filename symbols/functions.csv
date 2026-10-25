@@ -3809,3 +3809,9 @@ address,name,source,arguments,returns,convention
 0013d9f0,real_math_unknown_0013d9f0,source/math/real_math.c,eax,bool
 001565e0,input_abstraction_unknown_001565e0,source/input/input_abstraction.c,,void
 001753f0,particle_system_unknown_001753f0,source/effects/effects.c,ebx,void
+0018a5a0,sound_unknown_0018a5a0,source/sound/sound_manager.c,eax edi xmm0,int
+00137610,game_unknown_00137610,source/game/game_unknown_00134d90.c,ecx eax edi,pointer
+0002e1e0,unknown_0051f40c_clear_object,source/cseries/unknown_0051f40c.c,eax,void
+0010a040,scenery_get_pathfinding_policy,source/objects/objects.c,ecx stack,short,stdcall
+000bfcc0,object_unknown_000bfcc0,source/objects/objects.c,,void
+000bba20,object_unknown_000bba20,source/objects/objects.c,eax,void

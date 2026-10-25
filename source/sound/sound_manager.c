@@ -14185,3 +14185,29 @@ long __attribute__((stdcall)) sound_unknown_0018d1c0(
 
 	return NONE;
 }
+
+/* 0x0018a5a0: a looping sound of an object (sound_unknown_00188f90 with
+none), marked (bit 0 at 0x04) with a real at 0x08; its index */
+long sound_unknown_0018a5a0(
+	long tag_index,
+	long object_index,
+	real value)
+{
+	long index;
+	byte *entry;
+
+	if (tag_index==NONE)
+	{
+		return NONE;
+	}
+	index= sound_unknown_00188f90(tag_index, object_index, NONE, 0);
+	if (index==NONE)
+	{
+		return NONE;
+	}
+	entry= (byte *)unknown_004ed28c->data+(index&0xFFFF)*0x18;
+	entry[4]|= 1;
+	*(real *)(entry+0x08)= value;
+
+	return index;
+}

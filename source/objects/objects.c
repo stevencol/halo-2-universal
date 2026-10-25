@@ -1630,3 +1630,63 @@ boolean __attribute__((stdcall)) object_header_block_allocate(
 
 	return TRUE;
 }
+
+/* 0x0010a040: how a scenery placed in the scenario is pathfound (its short
+at 0x4C: 0 for that of its definition, at 0xBC; 1, 2 and 3 for 2, 0 and 1);
+3 without a definition or for another */
+short __attribute__((stdcall)) scenery_get_pathfinding_policy(
+	long definition_index,
+	const byte *placement)
+{
+	if (definition_index==NONE)
+	{
+		return 3;
+	}
+	switch (*(const short *)(placement+0x4C))
+	{
+	case 0:
+		return *(const short *)((const byte *)(uintptr_t)global_tag_instances[definition_index&0xFFFF].address+0xBC);
+	case 1:
+		return 2;
+	case 2:
+		return 0;
+	case 3:
+		return 1;
+	default:
+		return 3;
+	}
+}
+
+/* 0x000bfcc0: object_unknown_000bfd20 for every object */
+void object_unknown_000bfcc0(
+	void)
+{
+	struct object_iterator iterator;
+
+	object_iterator_new(&iterator, 0xFFFFFFFF, 0);
+	while (object_iterator_next(&iterator))
+	{
+		object_unknown_000bfd20(iterator.index);
+	}
+}
+
+/* 0x000bba20: an object (or, with the high bit of its header flags, its
+ultimate parent) wakes when the bit 0 of the flags says so, then gets the
+bit 2; and object_unknown_000bc7b0 */
+void object_unknown_000bba20(
+	long object_index)
+{
+	struct object_header_datum *header= &((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF];
+
+	if (header->flags&0x80)
+	{
+		object_index= object_get_ultimate_parent(object_index);
+		header= &((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF];
+	}
+	if (header->flags&1)
+	{
+		object_wake(object_index);
+		header->flags|= 4;
+	}
+	object_unknown_000bc7b0(object_index);
+}

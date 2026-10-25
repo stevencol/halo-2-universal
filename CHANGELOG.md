@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Seis funciones del camino al menú: un sonido en bucle de un objeto, un bitmap de un grupo, las entradas de un objeto, cómo se recorre un escenario, una función para cada objeto y un objeto despierto
+
+Seis funciones medianas (450 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2957 funciones se pasa a 2963, el 26,30 % de
+las del juego (el 14,112 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `sound_unknown_0018a5a0` | `0x0018a5a0` | `sound/sound_manager.c` |
+| `game_unknown_00137610` | `0x00137610` | `game/game_unknown_00134d90.c` |
+| `unknown_0051f40c_clear_object` | `0x0002e1e0` | `cseries/unknown_0051f40c.c` |
+| `scenery_get_pathfinding_policy` | `0x0010a040` | `objects/objects.c` |
+| `object_unknown_000bfcc0` | `0x000bfcc0` | `objects/objects.c` |
+| `object_unknown_000bba20` | `0x000bba20` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- un sonido en bucle de un objeto con un real; el bitmap que elige `tag_unknown_00137590`; las entradas de un objeto borradas; la política de recorrido de un escenario colocado; `object_unknown_000bfd20` para cada objeto; y un objeto (o su padre último) despierto. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 20 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Seis funciones del camino al menú: los recursos de las animaciones de un grafo, dos contadores de un estado de animación, un tipo de una parte, memoria permanente devuelta y los lugares de un sistema de partículas
 
 Seis funciones medianas (301 bytes) en 4 archivos, de las que el juego ejecuta
