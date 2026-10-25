@@ -781,3 +781,48 @@ boolean __attribute__((stdcall)) rasterizer_unknown_00014480(
 
 	return FALSE;
 }
+
+/* 0x000143c0: a bitmap of a bitmap group (the default bitmap of the
+rasterizer, at 0x64 of unknown_00485a80, for no group or an index that is
+not one of the count at 0x44 of the group) wanted at a stage, as
+rasterizer_unknown_00014390 does it; whether there was a bitmap */
+boolean __attribute__((stdcall)) rasterizer_unknown_000143c0(
+	long tag_index,
+	short index,
+	long stage,
+	real mip_bias)
+{
+	const byte *group;
+	struct bitmap_data *bitmap;
+
+	if (tag_index==NONE)
+	{
+		tag_index= *(const long *)((uintptr_t)unknown_00485a80+0x64);
+		index= 0;
+		if (tag_index==NONE)
+		{
+			return FALSE;
+		}
+	}
+	group= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	if (index<0 || index>=*(const long *)(group+0x44))
+	{
+		tag_index= *(const long *)((uintptr_t)unknown_00485a80+0x64);
+		index= 0;
+		group= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	}
+	if (!group || *(const long *)(group+0x44)<=0)
+	{
+		return FALSE;
+	}
+	bitmap= bitmap_group_get_bitmap(tag_index, index);
+	if (!bitmap)
+	{
+		return FALSE;
+	}
+	unknown_0051f3c8[4+(short)stage]= (long)shell_bitmap_get_texture_blocking(bitmap, mip_bias);
+	unknown_00485af4[(short)stage]= *(const short *)((const byte *)bitmap+4);
+	unknown_00485af4[4+(short)stage]= *(const short *)((const byte *)bitmap+6);
+
+	return TRUE;
+}

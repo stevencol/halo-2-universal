@@ -3854,3 +3854,7 @@ address,name,source,arguments,returns,convention
 0003bcb0,shell_unknown_0003bcb0,source/shell/shell.c,eax,int
 000a7a60,object_unknown_000a7a60,source/objects/objects.c,eax,void
 000b8b70,object_unknown_000b8b70,source/objects/objects.c,esi,void
+001daf30,havok_unknown_001daf30,source/physics/havok.c,eax stack,pointer,stdcall
+001c6440,havok_unknown_001c6440,source/physics/havok.c,ecx,pointer
+001c7300,havok_unknown_001c7300,source/physics/havok.c,esi,bool
+000143c0,rasterizer_unknown_000143c0,source/rasterizer/rasterizer_xbox.c,eax ecx stack xmm2,bool,stdcall

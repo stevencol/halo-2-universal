@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones del camino al menú: la pantalla de mezcla de una animación, la animación de un canal y si tiene un bit, y un bitmap de un grupo pedido en una etapa
+
+Cuatro funciones medianas (424 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3005 funciones se pasa a 3009, el 26,71 % de
+las del juego (el 14,323 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001daf30` | `0x001daf30` | `physics/havok.c` |
+| `havok_unknown_001c6440` | `0x001c6440` | `physics/havok.c` |
+| `havok_unknown_001c7300` | `0x001c7300` | `physics/havok.c` |
+| `rasterizer_unknown_000143c0` | `0x000143c0` | `rasterizer/rasterizer_xbox.c` |
+
+### Lo que se sabe
+
+- la pantalla de mezcla de una animación de un grafo (con sus recursos pedidos), o NULL; la animación de un canal de animaciones y si no tiene el bit 0 en 0x18; y un bitmap de un grupo (o el de por defecto del rasterizador) pedido en una etapa. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 12 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Cuatro funciones del camino al menú: la textura de un bitmap con otras dos banderas, un objeto que suelta lo que la simulación dice de él y lo que la partición de clusters guarda de uno
 
 Cuatro funciones pequeñas (326 bytes) en 2 archivos, de las que el juego ejecuta

@@ -1921,3 +1921,64 @@ byte *__attribute__((stdcall)) havok_unknown_001dd7c0(
 
 	return *(byte *const *)(animation+0x38);
 }
+
+/* 0x001daf30: with the resources of an animation of a graph asked for
+(havok_unknown_001dd9d0), its blend screen (the byte at 0x12, of those at
+0x28 of the graph it is in, 0x1C bytes each), from 0x04; NULL for no
+animation or no blend screen */
+byte *__attribute__((stdcall)) havok_unknown_001daf30(
+	const byte *graph,
+	unsigned long id)
+{
+	short index= (short)(id>>16);
+	const byte *animation;
+	signed char blend_screen;
+
+	if (index==NONE)
+	{
+		return NULL;
+	}
+	havok_unknown_001dd9d0(graph, id);
+	if ((short)id!=NONE)
+	{
+		graph= unknown4C_get_tag((short)id, graph);
+	}
+	animation= *(const byte *const *)(graph+0x30)+index*0x6C;
+	blend_screen= (signed char)animation[0x12];
+	if (blend_screen==NONE)
+	{
+		return NULL;
+	}
+
+	return *(byte *const *)(graph+0x28)+blend_screen*0x1C+0x04;
+}
+
+/* 0x001c6440: the animation of a channel of animations (its graph a tag at
+0x00, the id of the animation at 0x04), as havok_unknown_001daea0 gives
+it; NULL for none */
+byte *havok_unknown_001c6440(
+	const byte *channel)
+{
+	unsigned long id= *(const unsigned long *)(channel+0x04);
+
+	if ((short)(id>>16)==NONE)
+	{
+		return NULL;
+	}
+
+	return havok_unknown_001daea0(
+		(const byte *)(uintptr_t)global_tag_instances[*(const long *)channel&0xFFFF].address, id);
+}
+
+/* 0x001c7300: whether a channel of animations has no animation (no graph
+or no id), or one without the bit 0 at 0x18 */
+boolean havok_unknown_001c7300(
+	const byte *channel)
+{
+	if (*(const long *)channel==NONE || *(const short *)(channel+0x06)==NONE)
+	{
+		return TRUE;
+	}
+
+	return !(havok_unknown_001c6440(channel)[0x18]&1);
+}
