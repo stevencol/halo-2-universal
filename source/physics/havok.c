@@ -14,6 +14,7 @@ the file is a guess, by what its functions start.
 
 #include "cache/cache_files.h"
 #include "cache/texture_cache.h"
+#include "cache/animation_cache.h"
 #include "game/game.h"
 #include "memory/data.h"
 #include "objects/objects.h"
@@ -1530,4 +1531,54 @@ long havok_unknown_00146fd0(
 	result= third>first ? third : first;
 
 	return second>result ? second : result;
+}
+
+/* 0x001ddb90: what havok_unknown_001db120 finds gets its animations (by
+the two lists at 0x24 and 0x2C, of indices of the block at 0xB0 of
+something, 0x14 bytes, those with one at 0x10) predicted: the first soon,
+the second not, each when asked */
+void __attribute__((stdcall)) havok_unknown_001ddb90(
+	boolean first_list,
+	const byte *data,
+	long first,
+	long second,
+	long third,
+	boolean second_list)
+{
+	const byte *found;
+	long index;
+
+	if (!first_list && !second_list)
+	{
+		return;
+	}
+	found= havok_unknown_001db120(data, first, second, third);
+	if (!found)
+	{
+		return;
+	}
+	if (first_list)
+	{
+		for (index= 0; index<*(const long *)(found+0x24); index++)
+		{
+			struct cached_animation *animation= (struct cached_animation *)(*(byte *const *)(data+0xB0)+(*(const long *const *)(found+0x28))[index]*0x14);
+
+			if (((const byte *)animation)[0x10])
+			{
+				animation_cache_predict(animation, TRUE);
+			}
+		}
+	}
+	if (second_list)
+	{
+		for (index= 0; index<*(const long *)(found+0x2C); index++)
+		{
+			struct cached_animation *animation= (struct cached_animation *)(*(byte *const *)(data+0xB0)+(*(const long *const *)(found+0x30))[index]*0x14);
+
+			if (((const byte *)animation)[0x10])
+			{
+				animation_cache_predict(animation, FALSE);
+			}
+		}
+	}
 }

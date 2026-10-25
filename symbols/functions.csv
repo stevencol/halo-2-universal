@@ -3795,3 +3795,5 @@ address,name,source,arguments,returns,convention
 0018d1c0,sound_unknown_0018d1c0,source/sound/sound_manager.c,stack,int,stdcall
 00134240,game_engine_unknown_00134240,source/game/game_engine.c,stack,void,stdcall
 00146fd0,havok_unknown_00146fd0,source/physics/havok.c,,int
+001ddb90,havok_unknown_001ddb90,source/physics/havok.c,ebx stack stack stack stack stack,void,stdcall
+000bc380,object_header_block_allocate,source/objects/objects.c,eax stack stack stack,bool,stdcall

@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: las animaciones de lo que encuentran tres búsquedas y un bloque al final de un objeto
+
+Dos funciones medianas (452 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2945 funciones se pasa a 2947, el 26,16 % de
+las del juego (el 14,077 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001ddb90` | `0x001ddb90` | `physics/havok.c` |
+| `object_header_block_allocate` | `0x000bc380` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- las animaciones de lo que encuentran tres búsquedas, predichas pronto o no; y un bloque alineado al final de un objeto, en ceros.
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Dos funciones del camino al menú: los objetos de una lista con una cuenta en su tag primero y cuán ocupado está Havok
 
 Dos funciones medianas (365 bytes) en 2 archivos, de las que el juego ejecuta

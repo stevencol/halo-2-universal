@@ -1592,3 +1592,41 @@ long __attribute__((stdcall)) object_unknown_000b8ca0(
 		return object_index;
 	}
 }
+
+/* 0x000bc380: an object gets a block of a size (aligned to so many bits) at
+its end, as zeros, its place and size kept at an offset of the object;
+none (NONE and 0 there) for a size of 0. Whether its memory could grow */
+boolean __attribute__((stdcall)) object_header_block_allocate(
+	long object_index,
+	short offset,
+	short size,
+	byte alignment_bits)
+{
+	struct object_header_datum *header= &((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF];
+	unsigned long mask;
+	long padded;
+	unsigned short old_size;
+	byte *reference;
+
+	if (!size)
+	{
+		reference= (byte *)header->datum+offset;
+		*(short *)(reference+2)= NONE;
+		*(short *)reference= 0;
+		return TRUE;
+	}
+	mask= (1UL<<alignment_bits)-1;
+	padded= size+mask;
+	if (!memory_pool_block_reallocate(unknown_004de2ec, (void **)&header->datum, header->data_size+padded, 0, 0))
+	{
+		return FALSE;
+	}
+	old_size= (unsigned short)header->data_size;
+	header->data_size= (short)(old_size+padded);
+	reference= (byte *)((struct object_header_datum *)object_header_data->data)[object_index&0xFFFF].datum+offset;
+	*(short *)(reference+2)= (short)((mask+old_size)&~mask);
+	*(short *)reference= size;
+	memset((byte *)header->datum+(short)old_size, 0, padded);
+
+	return TRUE;
+}
