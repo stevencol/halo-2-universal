@@ -144,3 +144,28 @@ void unknown_0051f40c_clear_object(
 		}
 	}
 }
+
+/* 0x004850c8: whether something of the rasterizer is on */
+long unknown_004850c8;
+
+/* 0x00020720: for a player, with unknown_0051f408 and no unknown_004850c8,
+it is kept (unknown_005234c4); otherwise all the entries are cleared */
+void unknown_0051f40c_player(
+	long player_index)
+{
+	long index;
+
+	if (player_index==NONE)
+	{
+		return;
+	}
+	if (unknown_0051f408 && !unknown_004850c8)
+	{
+		unknown_005234c4= player_index;
+		return;
+	}
+	for (index= 0; index<unknown_005233ec; index++)
+	{
+		unknown_0051f40c_clear(index);
+	}
+}

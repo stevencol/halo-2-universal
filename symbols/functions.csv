@@ -3823,3 +3823,10 @@ address,name,source,arguments,returns,convention
 00131a00,real_math_hsv_to_rgb,source/math/real_math.c,edx ecx,pointer
 000bacc0,object_unknown_000bacc0,source/objects/objects.c,stack esi edi,bool,stdcall
 001dcfa0,havok_unknown_001dcfa0,source/physics/havok.c,esi ebx,bool
+00020720,unknown_0051f40c_player,source/cseries/unknown_0051f40c.c,eax,void
+001ddaf0,havok_unknown_001ddaf0,source/physics/havok.c,ebx,void
+001c4a20,havok_unknown_001c4a20,source/physics/havok.c,ecx,void
+0023e400,input_unknown_0023e400,source/input/input_xbox.c,esi,bool
+000b88e0,object_unknown_000b88e0,source/objects/objects.c,edx edi,void
+0003e320,unknown_0003e320,source/objects/objects.c,eax stack,bool,stdcall
+000ba350,object_unknown_000ba350,source/objects/objects.c,esi stack,void,stdcall

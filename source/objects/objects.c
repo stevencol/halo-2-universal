@@ -1744,3 +1744,68 @@ boolean __attribute__((stdcall)) object_unknown_000bacc0(
 
 	return TRUE;
 }
+
+long object_unknown_0016b430(long object_index);
+boolean geometry_cache_block_load(void *block, long kind);
+boolean __attribute__((stdcall)) havok_unknown_001cb5f0(long node_count, byte *state, real seconds, void *orientations, const void *targets);
+
+/* 0x000b88e0: what the cluster partition keeps of an object: its kind
+(0xAA), the flags object_unknown_0016b430 gives when it has the bit 9 at
+0x04, its center (0x40) and radius (0x4C) */
+void object_unknown_000b88e0(
+	long object_index,
+	byte *record)
+{
+	const byte *object= OBJECT_DATA(object_index);
+	short flags= 0;
+
+	if ((*(const unsigned long *)(object+0x04)>>9)&1)
+	{
+		flags= (short)object_unknown_0016b430(object_index);
+	}
+	*(short *)(record+0x02)= flags;
+	*(short *)record= (signed char)object[0xAA];
+	memcpy(record+0x04, object+0x40, 12);
+	*(unsigned long *)(record+0x10)= *(const unsigned long *)(object+0x4C);
+}
+
+/* 0x0003e320: whether the geometry blocks (0x5C bytes, at 0x38 of each
+section at 0x28; as many as at 0x1C) of a tag that some indices pick (255
+for none) are loaded */
+boolean __attribute__((stdcall)) unknown_0003e320(
+	long tag_index,
+	const byte *indices)
+{
+	const byte *data= (const byte *)(uintptr_t)global_tag_instances[tag_index&0xFFFF].address;
+	boolean result= TRUE;
+	long index;
+
+	for (index= 0; index<*(const long *)(data+0x1C); index++)
+	{
+		if (indices[index]!=0xFF && !geometry_cache_block_load(*(byte *const *)(data+0x28)+indices[index]*0x5C+0x38, 3))
+		{
+			result= FALSE;
+		}
+	}
+
+	return result;
+}
+
+/* 0x000ba350: an object with an animation (its short at 0x112, and a model
+at 0x38 of its definition) blends its nodes (as many as 0x110 over 0x20, at
+0x10E) to those at 0x112 over some seconds (its animation state at 0x12A),
+and wakes */
+void __attribute__((stdcall)) object_unknown_000ba350(
+	long object_index,
+	real seconds)
+{
+	byte *object= OBJECT_DATA(object_index);
+
+	if (*(const short *)(object+0x112)==NONE || *(const long *)((const byte *)(uintptr_t)global_tag_instances[*(const long *)object&0xFFFF].address+0x38)==NONE)
+	{
+		return;
+	}
+	havok_unknown_001cb5f0((long)((unsigned long)(long)*(const short *)(object+0x110)>>5), object+*(const short *)(object+0x12A), seconds,
+		object+*(const short *)(object+0x10E), object+*(const short *)(object+0x112));
+	object_wake(object_index);
+}

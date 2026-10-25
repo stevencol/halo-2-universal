@@ -447,3 +447,27 @@ void input_flush_rumble(
 		}
 	}
 }
+
+/* 0x0023e400: whether any gamepad that is there has a button (a byte at
+0x10 of its state, or of the state of the suppressed ones) */
+boolean input_unknown_0023e400(
+	long index)
+{
+	boolean result= FALSE;
+	long slot;
+
+	for (slot= 0; slot<4; slot++)
+	{
+		if (input_globals.gamepad_handles[slot])
+		{
+			const byte *state= input_globals.suppressed ? (const byte *)&input_globals.suppressed_state : (const byte *)&input_globals.gamepad_states[slot];
+
+			if (state[0x10+index])
+			{
+				result= TRUE;
+			}
+		}
+	}
+
+	return result;
+}

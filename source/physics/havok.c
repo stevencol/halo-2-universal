@@ -1746,3 +1746,54 @@ boolean havok_unknown_001dcfa0(
 		(*step)++;
 	}
 }
+
+/* 0x001ddaf0: the resources of a graph and of each graph it inherits from
+(by the tag at 0x04 of its entries, 0x20 bytes, as many as at 0x4C, at
+0x50) are asked for */
+void havok_unknown_001ddaf0(
+	const byte *graph)
+{
+	long index;
+
+	havok_unknown_001ddab0(graph);
+	for (index= 0; index<*(const long *)(graph+0x4C); index++)
+	{
+		long tag= *(const long *)(*(const byte *const *)(graph+0x50)+index*0x20+0x04);
+		const byte *inherited= NULL;
+
+		if (tag!=NONE)
+		{
+			inherited= (const byte *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+		}
+		havok_unknown_001ddab0(inherited);
+	}
+}
+
+void object_unknown_000bba20(long object_index);
+
+/* 0x001c4a20: the object of the havok component of a thing (its key
+0x2001) wakes (object_unknown_000bba20) when the component has the bit 5 of
+its flags (0x04) */
+void havok_unknown_001c4a20(
+	const byte *unknown)
+{
+	long count= *(const long *)(unknown+0x34);
+	const long *pair= *(const long *const *)(unknown+0x30);
+	long component_index= 0;
+	long index;
+	const byte *component;
+
+	for (index= 0; index<count; index++)
+	{
+		if (pair[index*2]==0x2001)
+		{
+			component_index= pair[index*2+1];
+			break;
+		}
+	}
+	component= (const byte *)havok_component_data->data+(component_index&0xFFFF)*0xA0;
+	if ((*(const unsigned long *)(component+0x04)>>5)&1)
+	{
+		object_unknown_000bba20(*(const long *)(component+0x08));
+	}
+}

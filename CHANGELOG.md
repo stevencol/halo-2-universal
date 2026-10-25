@@ -2,6 +2,33 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Siete funciones del camino al menú: un jugador para las entradas, los recursos de un grafo y los que hereda, el objeto de un componente de Havok, un botón de un mando, lo que guarda la partición de un objeto, bloques de geometría cargados y un objeto que mezcla
+
+Siete funciones medianas (621 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2973 funciones se pasa a 2980, el 26,45 % de
+las del juego (el 14,186 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0051f40c_player` | `0x00020720` | `cseries/unknown_0051f40c.c` |
+| `havok_unknown_001ddaf0` | `0x001ddaf0` | `physics/havok.c` |
+| `havok_unknown_001c4a20` | `0x001c4a20` | `physics/havok.c` |
+| `input_unknown_0023e400` | `0x0023e400` | `input/input_xbox.c` |
+| `object_unknown_000b88e0` | `0x000b88e0` | `objects/objects.c` |
+| `unknown_0003e320` | `0x0003e320` | `objects/objects.c` |
+| `object_unknown_000ba350` | `0x000ba350` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- un jugador guardado para las entradas o todas borradas (`unknown_004850c8`, nueva); los recursos de un grafo y de los que hereda; el objeto del componente de Havok de algo despierto; si algún mando tiene un botón; lo que la partición guarda de un objeto; si los bloques de geometría de un tag están cargados; y un objeto que mezcla sus nodos. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 25 de `make_mutations.py`, 0 sin cazar; 2 que no cambia nada o no se puede ver, quitada.
+
 ## 2026-10-25 — Tres funciones del camino al menú: un jugador local que empieza, los títulos en pantalla con su fundido y el siguiente par de un iterador de animaciones
 
 Tres funciones medianas (693 bytes) en 3 archivos, de las que el juego ejecuta
