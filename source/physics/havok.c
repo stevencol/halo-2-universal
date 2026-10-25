@@ -1205,3 +1205,54 @@ real havok_unknown_00224350(
 
 	return low>high ? low : high;
 }
+
+/* 0x001c6bb0: the definition of a tag (0x00) or, by an index (0x04, NONE
+for the tag itself), the definition of the tag of an element (0x20 bytes,
+at 0x50, as many as at 0x4C) of it; NULL for an index past them or an
+element without a tag */
+void *havok_unknown_001c6bb0(
+	const byte *reference)
+{
+	const byte *definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)reference&0xFFFF].address;
+	short index= *(const short *)(reference+0x04);
+	long tag;
+
+	if (index==NONE)
+	{
+		return (void *)definition;
+	}
+	if (index>=*(const long *)(definition+0x4C))
+	{
+		return NULL;
+	}
+	tag= *(const long *)(*(const byte *const *)(definition+0x50)+index*0x20+0x04);
+	if (tag==NONE)
+	{
+		return NULL;
+	}
+
+	return (void *)(uintptr_t)global_tag_instances[tag&0xFFFF].address;
+}
+
+/* 0x00246eb0: how long the vector at 0x28 of something is, less a half,
+from 0 to 1 */
+real havok_unknown_00246eb0(
+	const byte *data)
+{
+	const real *vector= (const real *)(data+0x28);
+	long double i= vector[0];
+	long double j= vector[1];
+	long double k= vector[2];
+	real value= (real)(__builtin_sqrtl(i*i+j*j+k*k)-0.5L);
+
+	if (0.0f>value)
+	{
+		return 0.0f;
+	}
+	if (value>1.0f)
+	{
+		return 1.0f;
+	}
+
+	return value;
+}

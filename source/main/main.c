@@ -1151,3 +1151,51 @@ byte *__attribute__((stdcall)) unknown_0024c5d0(
 
 	return node;
 }
+
+/* 0x00470a3c: eight numbers, NONE until they are set */
+long unknown_00470a3c[8]= {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE};
+
+/* 0x0023ecd0: they are 1 to 8 */
+void unknown_0023ecd0(
+	void)
+{
+	long index;
+
+	for (index= 0; index<8; index++)
+	{
+		unknown_00470a3c[index]= index+1;
+	}
+}
+
+/* 0x0017b270: whether a player (its flags at 0x02, two shorts at 0x10 and
+0x12 of something) may with a number (0 or 1), when the players globals
+have 1 at 0x08; otherwise only whether the short at 0x10 is not 1 (with the
+bit 5 of the flags) or not 2 */
+boolean unknown_0017b270(
+	const byte *data,
+	const byte *player,
+	long number)
+{
+	boolean result= (player[2]>>5)&1 ? *(const short *)(data+0x10)!=1 : *(const short *)(data+0x10)!=2;
+	short kind;
+
+	if (*(const short *)((const byte *)players_globals+0x08)!=1)
+	{
+		return result;
+	}
+	if (!result)
+	{
+		return FALSE;
+	}
+	kind= *(const short *)(data+0x12);
+	if (kind==2 && number)
+	{
+		return FALSE;
+	}
+	if (kind==1 && number!=1)
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}

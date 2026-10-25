@@ -1478,3 +1478,24 @@ boolean __attribute__((stdcall)) object_unknown_000e0d70(
 	*value= game_time_globals->seconds_per_tick*0.15f*(real)number;
 	return TRUE;
 }
+
+/* 0x004c1bd4: a short that the table of 0x004c1bd8 has */
+short unknown_004c1bd4;
+
+/* 0x0003d3e0: for the table, that short; for an object, whether the tag of
+the tag at 0x38 of its definition (as 0x0003d4f0 finds it) is a tag */
+short object_unknown_0003d3e0(
+	long object_index,
+	boolean from_table)
+{
+	const byte *definition;
+
+	if (from_table)
+	{
+		return unknown_004c1bd4;
+	}
+	definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)OBJECT_DATA(object_index)&0xFFFF].address;
+	definition= (const byte *)(uintptr_t)global_tag_instances[*(const long *)(definition+0x38)&0xFFFF].address;
+
+	return *(const long *)(definition+0x04)!=NONE;
+}

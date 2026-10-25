@@ -1625,7 +1625,7 @@ address,name,source,arguments,returns,convention
 0021f720,sound_console_stream_set_function,source/sound/sound_manager.c,stack,void,stdcall
 00188ea0,vector3d_decompress,source/math/real_math.c,ecx esi,pointer
 00126660,sound_unknown_states_set,source/sound/sound_manager.c,eax,void
-002ae8e0,unknown_002ae8e0,,ecx,void
+002ae8e0,unknown_002ae8e0,source/main/main_game.c,ecx,void
 002ae6f0,unknown_002ae6f0,,esi,void
 00221980,sound_classes_set_decibels,source/sound/sound_manager.c,stack stack stack,void,stdcall
 0021e410,sound_console_get_format,source/sound/sound_manager.c,eax esi edi,void
@@ -3730,3 +3730,8 @@ address,name,source,arguments,returns,convention
 00175180,particle_system_unknown_00175180,source/effects/effects.c,ecx stack,void,stdcall
 0017af80,effect_unknown_0017af80,source/effects/effects.c,edi esi,void
 000e0d70,object_unknown_000e0d70,source/objects/objects.c,eax stack,bool,stdcall
+0023ecd0,unknown_0023ecd0,source/main/main.c,,void
+0017b270,unknown_0017b270,source/main/main.c,ecx edx esi,bool
+0003d3e0,object_unknown_0003d3e0,source/objects/objects.c,eax ecx,short
+001c6bb0,havok_unknown_001c6bb0,source/physics/havok.c,ecx,pointer
+00246eb0,havok_unknown_00246eb0,source/physics/havok.c,eax,real:xmm0

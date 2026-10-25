@@ -780,3 +780,5 @@ address,name,source
 00510c4c,unknown_00510c4c,source/game/game_unknown_0013bf00.c
 004e6950,unknown_004e6950,source/game/game_unknown_0013bf00.c
 0054e7fc,unknown_0054e7fc,source/interface/user_interface.c
+00470a3c,unknown_00470a3c,source/main/main.c
+004c1bd4,unknown_004c1bd4,source/objects/objects.c

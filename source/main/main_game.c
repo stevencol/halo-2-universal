@@ -831,3 +831,20 @@ void main_game_next_map(
 	}
 	main_game_goto_main_menu(_main_menu_unknown7);
 }
+
+/* 0x002ae8e0: the things of something (as many as the low three bits of
+its byte at 0x02, at 0x1C on) each have one less of the count at 0x04 of
+their entry of unknown_00502104 (0x10 bytes, by their long at 0x08), the
+last first; it has none */
+void unknown_002ae8e0(
+	byte *voice)
+{
+	while ((signed char)(voice[2]<<5)>0)
+	{
+		long count= (signed char)(voice[2]<<5)>>5;
+		const byte *thing= *(const byte *const *)(voice+0x18+count*4);
+
+		((byte *)unknown_00502104->data+(*(const long *)(thing+0x08)&0xFFFF)*0x10)[4]--;
+		voice[2]= (byte)(((voice[2]&~7)|((count-1)&7)));
+	}
+}

@@ -2,6 +2,32 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-24 — Seis funciones pequeñas del camino al menú: ocho números, si un jugador puede, un short de la tabla o de un objeto, la definición de un tag o de un elemento, un vector y unas cuentas
+
+Seis funciones pequeñas (489 bytes) en 4 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2876 funciones se pasa a 2882, el 25,58 % de
+las del juego (el 13,765 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `unknown_0023ecd0` | `0x0023ecd0` | `main/main.c` |
+| `unknown_0017b270` | `0x0017b270` | `main/main.c` |
+| `object_unknown_0003d3e0` | `0x0003d3e0` | `objects/objects.c` |
+| `havok_unknown_001c6bb0` | `0x001c6bb0` | `physics/havok.c` |
+| `havok_unknown_00246eb0` | `0x00246eb0` | `physics/havok.c` |
+| `unknown_002ae8e0` | `0x002ae8e0` | `main/main_game.c` |
+
+### Lo que se sabe
+
+- ocho números de 1 a 8; si un jugador puede con un número; un short de la tabla de 0x004c1bd8 o de un objeto; la definición de un tag o de un elemento suyo; lo largo de un vector menos medio, de 0 a 1; y una cuenta menos para cada cosa de algo (dos variables nuevas).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 21 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-24 — Cinco funciones pequeñas del camino al menú: el mayor de dos reales, una fila de bits, un punto para un árbol de sistemas de partículas, un sistema que sale de un efecto y un tiempo de un objeto
 
 Cinco funciones pequeñas (357 bytes) en 3 archivos, de las que el juego ejecuta
