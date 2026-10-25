@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: un canal de animaciones que va a un frame y un color entre dos teñido
+
+Dos funciones medianas (415 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3066 funciones se pasa a 3068, el 27,23 % de
+las del juego (el 14,837 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001c6560` | `0x001c6560` | `physics/havok.c` |
+| `real_math_unknown_00131d60` | `0x00131d60` | `math/real_math.c` |
+
+### Lo que se sabe
+
+- un canal de animaciones va a un frame, dentro de los de su animación; si se reproduce una vez, marca cuándo el siguiente tick llega al final, y luego sus eventos; y un color entre dos (por su alfa primero) teñido hacia un tinte por lo que les falta de alfa, o multiplicado por él. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar; 1 que no cambia nada, quitada.
+
 ## 2026-10-25 — Dos funciones del camino al menú: el siguiente evento de un efecto y los sistemas de partículas avisados de su ubicación
 
 Dos funciones medianas (494 bytes) en 1 archivo, de las que el juego ejecuta

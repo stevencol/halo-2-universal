@@ -2295,3 +2295,39 @@ void __attribute__((stdcall)) havok_unknown_001d43d0(
 			(const real_matrix4x3 *)(*(const byte *const *)(render_model+0x4C)+(signed char)component[0x19]*0x60+0x28), result);
 	}
 }
+
+/* 0x001c6560: a channel of animations goes to a frame (0x1C), kept between
+0 and just under its animation's frames (0x14); one that plays once (the
+bit 0 at 0x12, without the bits 9 at 0x11) has the bit 1 at 0x11 when the
+next tick (its rate at 0x18, 30 frames a second) gets to the end. Then its
+events (havok_unknown_001c69b0) */
+void __attribute__((stdcall)) havok_unknown_001c6560(
+	byte *channel,
+	real frame)
+{
+	const byte *animation= NULL;
+	real position;
+
+	if (*(const short *)(channel+0x06)!=NONE)
+	{
+		animation= havok_unknown_001daea0(
+			(const byte *)(uintptr_t)global_tag_instances[*(const long *)channel&0xFFFF].address,
+			*(const unsigned long *)(channel+0x04));
+	}
+	position= 0.0f>frame ? 0.0f
+		: frame>(real)*(const short *)(animation+0x14)-0.0001f ? (real)*(const short *)(animation+0x14)-0.0001f : frame;
+	*(real *)(channel+0x1C)= position;
+	if ((channel[0x12]&1) && !(channel[0x11]&9))
+	{
+		if (game_time_globals->seconds_per_tick**(const real *)(channel+0x18)*30.0f + position
+			>=(real)*(const short *)(animation+0x14)-0.0001f)
+		{
+			channel[0x11]|= 2;
+		}
+		else
+		{
+			channel[0x11]&= ~2;
+		}
+	}
+	havok_unknown_001c69b0(channel);
+}

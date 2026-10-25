@@ -1662,3 +1662,38 @@ void real_math_unknown_00170bb0(
 	real_math_unknown_00170c00((const real_vector3d *)(second+13), (const real_vector3d *)(second+10),
 		(const real_vector3d *)(first+13), (const real_vector3d *)(first+10), (real_vector3d *)(difference+10));
 }
+
+/* 0x00131d60: a color between two (real_math_unknown_00131c20, their
+alpha first) tinted: toward the tint by what the colors lack of alpha
+between them when one has some, or times the tint */
+real *__attribute__((stdcall)) real_math_unknown_00131d60(
+	real *result,
+	const real *first,
+	const real *second,
+	const real *tint,
+	unsigned long flags,
+	real t)
+{
+	real_math_unknown_00131c20(first+1, second+1, flags, t, result);
+	if (!tint)
+	{
+		return result;
+	}
+	if (first[0]>0.0001f || second[0]>0.0001f)
+	{
+		real alpha= (1.0f-t)*first[0] + second[0]*t;
+		real weight= 1.0f-alpha;
+
+		result[0]= result[0]*alpha + tint[0]*weight;
+		result[1]= tint[1]*weight + result[1]*alpha;
+		result[2]= tint[2]*weight + result[2]*alpha;
+	}
+	else
+	{
+		result[0]= result[0]*tint[0];
+		result[1]= tint[1]*result[1];
+		result[2]= tint[2]*result[2];
+	}
+
+	return result;
+}
