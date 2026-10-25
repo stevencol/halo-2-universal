@@ -2,6 +2,28 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Dos funciones del camino al menú: los recursos de las animaciones de un estado pedidos y si uno de diez botones está pulsado
+
+Dos funciones pequeñas (214 bytes) en 2 archivos, de las que el juego ejecuta
+hasta el menú principal. De 3069 funciones se pasa a 3071, el 27,26 % de
+las del juego (el 14,851 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001ce180` | `0x001ce180` | `physics/havok.c` |
+| `input_unknown_00156ab0` | `0x00156ab0` | `input/input_xbox.c` |
+
+### Lo que se sabe
+
+- los recursos de las animaciones de un modo, una clase y un tipo de arma de un estado de animaciones se piden por los nombres que encuentra `havok_unknown_001cc2f0`; y si uno de diez botones (0 a 7, 12 y 13) está pulsado. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 8 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Una función del camino al menú: las animaciones de una unidad que vuelven a empezar
 
 Una función mediana (218 bytes) en 1 archivo, de las que el juego ejecuta

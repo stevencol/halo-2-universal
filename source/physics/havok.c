@@ -2331,3 +2331,26 @@ void __attribute__((stdcall)) havok_unknown_001c6560(
 	}
 	havok_unknown_001c69b0(channel);
 }
+
+/* 0x001ce180: the resources of the animations of a mode, a weapon class
+and a weapon type of a state of animations (its graph a tag at 0x68) are
+asked for (havok_unknown_001ddd00), by the names havok_unknown_001cc2f0
+finds for them */
+void __attribute__((stdcall)) havok_unknown_001ce180(
+	const byte *state,
+	unsigned long mode,
+	unsigned long weapon_class,
+	unsigned long weapon_type,
+	boolean urgent,
+	boolean other)
+{
+	unsigned long names[4];
+
+	if (*(const long *)(state+0x68)==NONE)
+	{
+		return;
+	}
+	havok_unknown_001cc2f0(mode, weapon_class, weapon_type, names, state, 0x07000101);
+	havok_unknown_001ddd00((const byte *)(uintptr_t)global_tag_instances[*(const long *)(state+0x68)&0xFFFF].address,
+		names[0], names[1], names[2], urgent, other);
+}

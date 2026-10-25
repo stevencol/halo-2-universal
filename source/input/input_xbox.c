@@ -471,3 +471,22 @@ boolean input_unknown_0023e400(
 
 	return result;
 }
+
+/* 0x00156ab0: whether one of ten buttons (0 to 7, 12 and 13) is down, as
+input_unknown_0023e400 says */
+boolean input_unknown_00156ab0(
+	void)
+{
+	static const long buttons[]= { 0, 1, 2, 3, 4, 5, 6, 7, 12, 13 };
+	unsigned long index;
+
+	for (index= 0; index<sizeof(buttons)/sizeof(buttons[0]); index++)
+	{
+		if (input_unknown_0023e400(buttons[index]))
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
