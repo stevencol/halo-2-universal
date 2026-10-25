@@ -1456,3 +1456,68 @@ long real_math_unknown_0013d9f0(
 {
 	return type==4 || type==5;
 }
+
+/* 0x00131a00: a color from hue, saturation and value (the hue from 0 to 1) */
+real_rgb_color *real_math_hsv_to_rgb(
+	const real *hsv,
+	real_rgb_color *rgb)
+{
+	real hue= hsv[0]*6.0f;
+	long sector;
+	real fraction;
+	real p;
+	real q;
+	real t;
+
+	if (hsv[1]==0.0f)
+	{
+		rgb->blue= hsv[2];
+		rgb->green= hsv[2];
+		rgb->red= hsv[2];
+		return rgb;
+	}
+	sector= (long)hue;
+	if ((real)sector>hue)
+	{
+		sector--;
+	}
+	fraction= hue-(real)sector;
+	q= (1.0f-hsv[1]*fraction)*hsv[2];
+	p= (1.0f-hsv[1])*hsv[2];
+	t= (1.0f-(1.0f-fraction)*hsv[1])*hsv[2];
+	switch (sector)
+	{
+	case 0:
+		rgb->red= hsv[2];
+		rgb->green= t;
+		rgb->blue= p;
+		break;
+	case 1:
+		rgb->red= q;
+		rgb->green= hsv[2];
+		rgb->blue= p;
+		break;
+	case 2:
+		rgb->red= p;
+		rgb->green= hsv[2];
+		rgb->blue= t;
+		break;
+	case 3:
+		rgb->red= p;
+		rgb->green= q;
+		rgb->blue= hsv[2];
+		break;
+	case 4:
+		rgb->red= t;
+		rgb->green= p;
+		rgb->blue= hsv[2];
+		break;
+	case 5:
+		rgb->red= hsv[2];
+		rgb->green= p;
+		rgb->blue= q;
+		break;
+	}
+
+	return rgb;
+}

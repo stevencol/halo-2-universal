@@ -2,6 +2,30 @@
 
 Los cambios más recientes van arriba.
 
+## 2026-10-25 — Cuatro funciones del camino al menú: las animaciones de un arma pedidas, una mezcla que empieza, un color de matiz, saturación y valor, y una entrada de un objeto
+
+Cuatro funciones medianas (554 bytes) en 3 archivos, de las que el juego ejecuta
+hasta el menú principal. De 2966 funciones se pasa a 2970, el 26,36 % de
+las del juego (el 14,142 % de sus bytes).
+
+### Añadido
+
+| Función | Dirección | Archivo |
+| --- | --- | --- |
+| `havok_unknown_001ddc70` | `0x001ddc70` | `physics/havok.c` |
+| `havok_unknown_001cb5f0` | `0x001cb5f0` | `physics/havok.c` |
+| `real_math_hsv_to_rgb` | `0x00131a00` | `math/real_math.c` |
+| `object_unknown_000bacc0` | `0x000bacc0` | `objects/objects.c` |
+
+### Lo que se sabe
+
+- las animaciones de un modo pedidas para una clase y tipo de arma y por defecto; una mezcla de un estado de animación que empieza de nuevo; un color RGB de HSV; y una de las entradas de doce bytes de un objeto puesta. Guiado por halo2-decompiled (CC0).
+
+### Sin comprobar
+
+- Para qué sirven; los nombres son direcciones o suposiciones.
+- Mutaciones: 16 de `make_mutations.py`, 0 sin cazar.
+
 ## 2026-10-25 — Tres funciones del camino al menú: la hoja y el cluster de un punto, si un arma la lleva un jugador y una cabecera de objeto nueva
 
 Tres funciones medianas (321 bytes) en 3 archivos, de las que el juego ejecuta

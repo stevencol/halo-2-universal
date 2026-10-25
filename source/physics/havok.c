@@ -1643,3 +1643,59 @@ boolean havok_unknown_001cd4e0(
 
 	return result;
 }
+
+/* 0x001ddc70: the animations of a mode of a graph are asked for (as
+havok_unknown_001ddb90) for a weapon class and type, then with the default
+name (0x030000D9) in place of each, then of all */
+void __attribute__((stdcall)) havok_unknown_001ddc70(
+	boolean first_list,
+	const byte *graph,
+	long mode,
+	long weapon_class,
+	long weapon_type,
+	boolean second_list)
+{
+	if (!first_list && !second_list)
+	{
+		return;
+	}
+	havok_unknown_001ddb90(first_list, graph, mode, weapon_class, weapon_type, second_list);
+	havok_unknown_001ddb90(first_list, graph, mode, weapon_class, 0x030000D9, second_list);
+	havok_unknown_001ddb90(first_list, graph, mode, 0x030000D9, weapon_type, second_list);
+	havok_unknown_001ddb90(first_list, graph, mode, 0x030000D9, 0x030000D9, second_list);
+	havok_unknown_001ddb90(first_list, graph, 0x030000D9, 0x030000D9, 0x030000D9, second_list);
+}
+
+void __attribute__((stdcall)) unit_counter_start(signed char *counter, boolean up, real seconds);
+real unit_counter_seconds(const signed char *counter);
+
+/* 0x001cb5f0: when a blend of an animation state (its counter at 0x64) is
+done or would end within some seconds, the orientations of its nodes (0x20
+bytes each) are set to their targets and the blend starts again over the
+seconds; whether it did */
+boolean __attribute__((stdcall)) havok_unknown_001cb5f0(
+	long node_count,
+	byte *state,
+	real seconds,
+	void *orientations,
+	const void *targets)
+{
+	signed char *counter;
+
+	if (node_count<=0 || !(seconds>0.0f))
+	{
+		return FALSE;
+	}
+	counter= (signed char *)(state+0x64);
+	if (counter[1] && !(counter[3]&2) && seconds<unit_counter_seconds(counter))
+	{
+		return FALSE;
+	}
+	counter[1]= 0;
+	counter[0]= 0;
+	counter[3]= 0;
+	memcpy(orientations, targets, (unsigned long)node_count*0x20);
+	unit_counter_start(counter, TRUE, seconds);
+
+	return TRUE;
+}

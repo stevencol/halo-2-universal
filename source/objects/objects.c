@@ -1714,3 +1714,33 @@ long __attribute__((stdcall)) object_header_new(
 
 	return index;
 }
+
+void __attribute__((stdcall)) cached_object_render_state_unknown_0003dd10(long object_index, boolean always);
+
+/* 0x000bacc0: the index-th of the two halves of the twelve-byte entries of
+an object (at its short at 0x126, of a size at 0x124; as
+object_unknown_000bad50 reads them) is set, and its cached render state
+keeps its colors; FALSE for one that is not there */
+boolean __attribute__((stdcall)) object_unknown_000bacc0(
+	long object_index,
+	long index,
+	const unsigned long *value)
+{
+	byte *object= OBJECT_DATA(object_index);
+	unsigned long *entries= (unsigned long *)(object+*(const short *)(object+0x126));
+	long count= (long)((unsigned long)(long)*(const short *)(object+0x124)/12)/2;
+
+	if (index<0 || index>=count)
+	{
+		return FALSE;
+	}
+	entries[index*3]= value[0];
+	entries[index*3+1]= value[1];
+	entries[index*3+2]= value[2];
+	entries[(index+count)*3]= value[0];
+	entries[(index+count)*3+1]= value[1];
+	entries[(index+count)*3+2]= value[2];
+	cached_object_render_state_unknown_0003dd10(object_index, TRUE);
+
+	return TRUE;
+}
